@@ -1,0 +1,330 @@
+/* AppStyles.css */
+body {
+  background: linear-gradient(135deg, #dbeafe 0%, #f5d0fe 100%);
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* General Card Layout */
+.page-container {
+  max-width: 420px;
+  width: 100%;
+  margin: 40px auto;
+  padding: 32px 28px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+}
+
+.page-container:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+}
+
+/* Headings */
+.page-container h2 {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #7c3aed;
+  margin-bottom: 22px;
+}
+
+/* Forms */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form input,
+.form select {
+  padding: 12px;
+  font-size: 15px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  transition: 0.2s;
+}
+
+.form input:focus,
+.form select:focus {
+  border-color: #7c3aed;
+  background: #fff;
+  outline: none;
+}
+
+/* Buttons */
+.form button {
+  margin-top: 6px;
+  background: linear-gradient(90deg, #a78bfa 0%, #f472b6 100%);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s;
+}
+
+.form button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(90deg, #7c3aed 0%, #ec4899 100%);
+}
+
+/* Error message */
+.error-message {
+  color: #db2777;
+  background: #fef2f2;
+  border-left: 4px solid #f87171;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+/* Dashboard card */
+.dashboard-info {
+  background: #f3f6fa;
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 15px;
+  color: #243649;
+  line-height: 1.6;
+}/* Navbar Styles */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  z-index: 1000;
+}
+
+.nav-left .logo {
+  font-size: 22px;
+  font-weight: 800;
+  color: #7c3aed;
+  text-decoration: none;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-link {
+  text-decoration: none;
+  font-weight: 500;
+  color: #374151;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: #7c3aed;
+}
+
+.nav-search {
+  padding: 8px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 6px;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.nav-search:focus {
+  border-color: #7c3aed;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.nav-btn {
+  background: transparent;
+  color: #374151;
+  border: 1.5px solid #d1d5db;
+}
+
+.nav-btn:hover {
+  border-color: #7c3aed;
+  color: #7c3aed;
+}
+
+.signup-btn {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+}
+
+.signup-btn:hover {
+  background: #6d28d9;
+}
+AppStyles.cs
+mai ye update krde
+.form input,
+.form select {
+  padding: 12px;
+  font-size: 15px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  transition: 0.2s;
+  color: black;
+}
+/* Post Job form wrapper (same style as login) */
+.post-job-container {
+  max-width: 420px;
+  margin: 80px auto;
+  padding: 35px 30px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+/* Title */
+.post-job-container h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+/* Inputs */
+.post-job-container input,
+.post-job-container textarea {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+  background: #f9fafb;
+  transition: all 0.3s ease;
+}
+
+/* Focus glow */
+.post-job-container input:focus,
+.post-job-container textarea:focus {
+  border-color: #a855f7;
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.3);
+  background: #fff;
+  outline: none;
+}
+
+/* Textarea */
+.post-job-container textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Submit button */
+.post-job-container button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(90deg, #a855f7, #ec4899);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.post-job-container button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+
+/* ================= JOBS LIST STYLING ================= */
+
+.jobs-list {
+  max-width: 1100px;
+  margin: 50px auto;
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.jobs-list h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #1e3a8a; /* deep blue */
+}
+
+.jobs-list ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+.job-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.job-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.job-card h3 {
+  font-size: 1.4rem;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.job-card p {
+  margin: 6px 0;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.job-card strong {
+  color: #1e40af; /* navy blue for highlights */
+}
+
+/* ✅ Responsive */
+@media (max-width: 600px) {
+  .jobs-list h2 {
+    font-size: 1.6rem;
+  }
+  .job-card {
+    padding: 15px;
+  }
+  .job-card h3 {
+    font-size: 1.2rem;
+  }
+}

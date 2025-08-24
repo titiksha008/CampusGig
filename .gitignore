@@ -1,0 +1,23 @@
+# Ignore node_modules in both frontend and backend
+echo "frontend/node_modules/" >> .gitignore
+echo "backend/node_modules/" >> .gitignore
+
+# Ignore environment variable files in both folders
+echo "frontend/.env" >> .gitignore
+echo "backend/.env" >> .gitignore
+
+# Ignore OS files
+echo ".DS_Store" >> .gitignore
+echo "Thumbs.db" >> .gitignore
+
+# Ignore IDE/editor folders
+echo ".vscode/" >> .gitignore
+echo ".idea/" >> .gitignore
+
+# Ignore build/output folders
+echo "frontend/build/" >> .gitignore
+echo "frontend/dist/" >> .gitignore
+echo "backend/dist/" >> .gitignore
+
+# Ignore logs
+echo "*.log" >> .gitignore
