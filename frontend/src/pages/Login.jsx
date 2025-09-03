@@ -1,4 +1,4 @@
-import { useState } from "react";
+  import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "./AppStyles.css";
@@ -16,15 +16,15 @@ export default function Login() {
     e.preventDefault();
     setError("");
     try {
-      const { data } = await api.post("/auth/login", form);
-      localStorage.setItem("token", data.token);
-      navigate("/dashboard");
+      const { data } = await api.post("/auth/login", form); // cookie is set automatically
+      navigate("/dashboard"); // token is already in cookie
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
   };
 
-  return (
+
+   return (
     <div className="page-container">
       <h2>Login</h2>
       {error && <p className="error-message">{error}</p>}

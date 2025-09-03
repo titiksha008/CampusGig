@@ -7,16 +7,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     api
-      .get("/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get("/auth/me") // cookies sent automatically
       .then((res) => setUser(res.data.user))
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
@@ -35,6 +27,6 @@ export default function Dashboard() {
       ) : (
         <p className="error-message">You are not logged in.</p>
       )}
-    </div>
-  );
+    </div>
+  );
 }

@@ -5,6 +5,7 @@ import JobsList from "./pages/JobsList";
 import Dashboard from "./pages/Dashboard";
 import Navbar from "./pages/Navbar"; 
   import PostJob from "./pages/PostJob";
+  import Profile from "./pages/Profile";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/post-job" element={<PostJob />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/profile" element={<Profile />} />
   <Route path="/" element={<h1 style={{ textAlign: "center", marginTop: "40px", color: "#7c3aed" }}>Welcome to CampusGig</h1>} />
 
 </Routes>

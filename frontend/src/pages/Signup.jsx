@@ -1,3 +1,4 @@
+//Signup.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -16,18 +17,21 @@ export default function Signup() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
+ };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     try {
-      await api.post("/auth/signup", form);
+      const { data } = await api.post("/auth/signup", form);
+      // Auto-login: store token if backend returns it, or redirect to login
+      // If backend doesn't return token, keep current navigate("/login")
       navigate("/login");
     } catch (err) {
       setError(err.response?.data?.message || "Signup failed");
     }
   };
+
 
   return (
     <div className="page-container">
