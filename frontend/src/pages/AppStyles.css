@@ -183,8 +183,8 @@ body {
 .signup-btn:hover {
   background: #6d28d9;
 }
-AppStyles.cs
-mai ye update krde
+/* AppStyles.cs
+mai ye update krde */
 .form input,
 .form select {
   padding: 12px;
@@ -217,7 +217,8 @@ mai ye update krde
 /* Inputs */
 .post-job-container input,
 .post-job-container textarea {
-  width: 100%;
+  width: 350px;
+  /* margin-right: 50px; */
   padding: 12px 14px;
   margin-bottom: 15px;
   border: 1px solid #e5e7eb;
@@ -225,6 +226,7 @@ mai ye update krde
   font-size: 15px;
   background: #f9fafb;
   transition: all 0.3s ease;
+  color: #374151;
 }
 
 /* Focus glow */
@@ -273,9 +275,21 @@ mai ye update krde
 
 .jobs-list h2 {
   text-align: center;
-  font-size: 2rem;
-  margin-bottom: 30px;
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin-bottom: 35px;
   color: #1e3a8a; /* deep blue */
+  position: relative;
+}
+
+.jobs-list h2::after {
+  content: "";
+  display: block;
+  width: 70px;
+  height: 4px;
+  background: #3b82f6; /* bright blue */
+  margin: 12px auto 0;
+  border-radius: 4px;
 }
 
 .jobs-list ul {
@@ -288,43 +302,82 @@ mai ye update krde
 
 .job-card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border: 1px solid #e5e7eb;
 }
 
 .job-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-8px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .job-card h3 {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   color: #0f172a;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  font-weight: 600;
 }
 
 .job-card p {
   margin: 6px 0;
   color: #374151;
-  font-size: 0.95rem;
+  font-size: 0.96rem;
+  line-height: 1.4;
 }
 
 .job-card strong {
   color: #1e40af; /* navy blue for highlights */
 }
 
+/* ✅ Buttons inside job-actions */
+.job-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 12px;
+}
+
+.job-actions button {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.25s ease, transform 0.15s ease;
+}
+
+.job-actions button:first-child {
+  background: #3b82f6; /* Blue */
+  color: white;
+}
+
+.job-actions button:first-child:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.job-actions button:last-child {
+  background: #f3f4f6; /* light gray */
+  color: #374151;
+}
+
+.job-actions button:last-child:hover {
+  background: #e5e7eb;
+  transform: scale(1.05);
+}
+
 /* ✅ Responsive */
 @media (max-width: 600px) {
   .jobs-list h2 {
-    font-size: 1.6rem;
+    font-size: 1.7rem;
   }
   .job-card {
-    padding: 15px;
+    padding: 16px;
   }
   .job-card h3 {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
   }
 }
