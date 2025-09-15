@@ -93,7 +93,8 @@ const userSchema = new mongoose.Schema(
     // Ratings & Badges
     rating: { type: Number, default: 0 },
     badges: [String],
-    jobsPosted: { type: Number, default: 0 } , // ✅ add this
+    jobsPosted: { type: Number, default: 0 } ,
+    acceptedJobsCount: { type: Number, default: 0 }, // ✅ add this
 
     // Skills & Portfolio
     skills: [{ type: String }],

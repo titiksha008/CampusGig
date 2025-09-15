@@ -760,7 +760,7 @@ const Profile = () => {
     <p>Jobs Posted</p>
   </div>
   <div className="stat-card">
-    <h3>{user.jobsAccepted || 0}</h3>
+    <h3>{user.acceptedJobsCount || 0}</h3> {/* ✅ fixed */}
     <p>Jobs Accepted</p>
   </div>
   <div className="stat-card">
@@ -771,6 +771,8 @@ const Profile = () => {
     <h3>{user.rating || "—"}⭐</h3>
     <p>Rating</p>
   </div>
+
+
 </div>
       {/* Avatar Picker */}
       {editMode && showSelector && (
