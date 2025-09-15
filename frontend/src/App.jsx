@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import JobsList from "./pages/JobsList";
+import AcceptedJobsDashboard from "./pages/AcceptedJobsDashboard"; // accepted jobs dashboard
 import Dashboard from "./pages/Dashboard";
 import Navbar from "./pages/Navbar";
 import PostJob from "./pages/PostJob";
@@ -32,7 +33,8 @@ export default function App() {
 
       <div style={{ paddingTop: "80px" }}>
         <Routes>
-          <Route path="/" element={<JobsList setUser={setUser} />} />   {/* Pass setUser to update after accepting */}
+          <Route path="/" element={<JobsList setUser={setUser} />} /> {/* Pass setUser */}
+          <Route path="/accepted" element={<AcceptedJobsDashboard />} /> {/* Accepted jobs dashboard */}
           <Route path="/post-job" element={<PostJob />} />
           <Route path="/login" element={<Login setUser={setUser} />} /> {/* Let login set the user */}
           <Route path="/signup" element={<Signup setUser={setUser} />} />
