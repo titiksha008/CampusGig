@@ -39,7 +39,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import JobsList from "./pages/JobsList";
-import AcceptedJobsDashboard from "./pages/AcceptedJobsDashboard"; // import accepted jobs dashboard
+// import AcceptedJobsDashboard from "./pages/AcceptedJobsDashboard"; // import accepted jobs dashboard
 import Dashboard from "./pages/Dashboard";
 import Navbar from "./pages/Navbar"; 
 import PostJob from "./pages/PostJob";
@@ -54,7 +54,7 @@ export default function App() {
       <div style={{ paddingTop: "80px" }}>
         <Routes>
           <Route path="/" element={<JobsList />} />   {/* Home shows jobs */}
-          <Route path="/accepted" element={<AcceptedJobsDashboard />} /> {/* Accepted jobs dashboard */}
+          {/* <Route path="/accepted" element={<AcceptedJobsDashboard />} /> Accepted jobs dashboard */}
           <Route path="/post-job" element={<PostJob />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
