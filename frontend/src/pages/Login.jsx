@@ -1,30 +1,31 @@
-  import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "./AppStyles.css";
+import { useAuth } from "../context/AuthContext"; // ✅ import
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setUser } = useAuth(); // ✅ use context
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     try {
-      const { data } = await api.post("/auth/login", form); // cookie is set automatically
-      navigate("/dashboard"); // token is already in cookie
+      const { data } = await api.post("/auth/login", form);
+      setUser(data.user); // ✅ update context
+      navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
   };
 
-
-   return (
+  return (
     <div className="page-container">
       <h2>Login</h2>
       {error && <p className="error-message">{error}</p>}
