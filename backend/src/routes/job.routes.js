@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 // // backend/src/routes/job.routes.js
 // import express from "express";
@@ -88,6 +89,11 @@
 // backend/src/routes/job.routes.js
 import express from "express";
 import Job from "../models/job.js";
+
+// backend/src/routes/job.routes.js
+import express from "express";
+import Job from "../models/Jobs.js";
+
 import AssignedJob from "../models/AssignedJob.js";
 import { auth } from "../middleware/auth.middleware.js";
 import User from "../models/User.js"; // ✅ import User model at the top
@@ -112,10 +118,33 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
+
 // Get all jobs
 router.get("/", async (req, res) => {
   try {
     const jobs = await Job.find().populate("postedBy", "name email");
+
+// GET all jobs with optional search and role filters
+router.get("/", async (req, res) => {
+  try {
+    const { search, role } = req.query;
+    let filter = {};
+
+    // 🔎 Search by title OR description
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    // 🎭 Filter by category/role
+    if (role && role !== "") {
+      filter.category = { $regex: role, $options: "i" };
+    }
+
+    const jobs = await Job.find(filter).populate("postedBy", "name email");
+
     res.json(jobs);
   } catch (err) {
     console.error(err);
@@ -123,8 +152,14 @@ router.get("/", async (req, res) => {
   }
 });
 
+
 // ------------------- Accept Job -------------------
 router.post("/:id/accept", auth, async (req, res) => {
+
+
+// ------------------- Accept Job -------------------
+router.put("/:id/accept", auth, async (req, res) => {
+
   try {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: "Job not found" });
