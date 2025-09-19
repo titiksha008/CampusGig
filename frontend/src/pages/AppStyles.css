@@ -49,6 +49,7 @@ body {
   border-radius: 6px;
   background: #f8fafc;
   transition: 0.2s;
+  color: black;
 }
 
 .form input:focus,
@@ -96,7 +97,9 @@ body {
   font-size: 15px;
   color: #243649;
   line-height: 1.6;
-}/* Navbar Styles */
+}
+
+/* Navbar Styles */
 .navbar {
   position: fixed;
   top: 0;
@@ -108,7 +111,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   z-index: 1000;
 }
 
@@ -175,26 +178,15 @@ body {
 }
 
 .signup-btn {
-  background: #7c3aed;
-  color: #fff;
+  background: #fff;
+  color: #374151;
   border: none;
 }
 
 .signup-btn:hover {
   background: #6d28d9;
 }
-/* AppStyles.cs
-mai ye update krde */
-.form input,
-.form select {
-  padding: 12px;
-  font-size: 15px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 6px;
-  background: #f8fafc;
-  transition: 0.2s;
-  color: black;
-}
+
 /* Post Job form wrapper (same style as login) */
 .post-job-container {
   max-width: 420px;
@@ -218,7 +210,6 @@ mai ye update krde */
 .post-job-container input,
 .post-job-container textarea {
   width: 350px;
-  /* margin-right: 50px; */
   padding: 12px 14px;
   margin-bottom: 15px;
   border: 1px solid #e5e7eb;
@@ -263,7 +254,6 @@ mai ye update krde */
   transform: translateY(-2px);
 }
 
-
 /* ================= JOBS LIST STYLING ================= */
 
 .jobs-list {
@@ -271,6 +261,7 @@ mai ye update krde */
   margin: 50px auto;
   padding: 20px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center; /* ✅ Center align */
 }
 
 .jobs-list h2 {
@@ -290,6 +281,31 @@ mai ye update krde */
   background: #3b82f6; /* bright blue */
   margin: 12px auto 0;
   border-radius: 4px;
+}
+
+/* ✅ Centered Search + Filter */
+.jobs-filters {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin: 20px auto 30px;
+  max-width: 600px;
+}
+
+.jobs-filters input,
+.jobs-filters select {
+  padding: 8px 12px;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.jobs-filters input:focus,
+.jobs-filters select:focus {
+  outline: none;
+  border-color: #6c63ff;
+  box-shadow: 0 0 4px rgba(108, 99, 255, 0.4);
 }
 
 .jobs-list ul {
@@ -380,57 +396,12 @@ mai ye update krde */
   .job-card h3 {
     font-size: 1.25rem;
   }
-
-
+  .jobs-filters {
+    flex-direction: column;
+    max-width: 100%;
+  }
+  .jobs-filters input,
+  .jobs-filters select {
+    width: 100%;
+  }
 }
-/* Search Bar */
-.nav-search {
-  width: 280px;
-  padding: 10px 40px 10px 15px; /* space for icon */
-  font-size: 15px;
-  border: 2px solid #ddd;
-  border-radius: 25px;
-  outline: none;
-  transition: all 0.3s ease;
-  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='gray'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z'/%3E%3C/svg%3E") no-repeat right 12px center;
-  background-size: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-  color: #374151;
-}
-
-.nav-search:hover {
-  border-color: #aaa;
-}
-
-.nav-search:focus {
-  border-color: #4cafef;
-  box-shadow: 0 0 6px rgba(76, 175, 239, 0.4);
-}
-
-/* Dropdown Filter */
-.nav-filter {
-  width: 150px;
-  padding: 10px 15px;
-  font-size: 15px;
-  border: 2px solid #ddd;
-  border-radius: 25px;
-  outline: none;
-  transition: all 0.3s ease;
-  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='gray' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E") no-repeat right 12px center;
-  background-size: 16px;
-  appearance: none; /* removes default arrow */
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-  color: #374151;
-
-}
-
-.nav-filter:hover {
-  border-color: #aaa;
-}
-
-.nav-filter:focus {
-  border-color: #4cafef;
-  box-shadow: 0 0 6px rgba(76, 175, 239, 0.4);
-}
-
