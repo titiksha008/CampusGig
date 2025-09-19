@@ -49,6 +49,7 @@ body {
   border-radius: 6px;
   background: #f8fafc;
   transition: 0.2s;
+  color: black;
 }
 
 .form input:focus,
@@ -96,7 +97,9 @@ body {
   font-size: 15px;
   color: #243649;
   line-height: 1.6;
-}/* Navbar Styles */
+}
+
+/* Navbar Styles */
 .navbar {
   position: fixed;
   top: 0;
@@ -108,7 +111,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   z-index: 1000;
 }
 
@@ -175,26 +178,15 @@ body {
 }
 
 .signup-btn {
-  background: #7c3aed;
-  color: #fff;
+  background: #fff;
+  color: #374151;
   border: none;
 }
 
 .signup-btn:hover {
   background: #6d28d9;
 }
-/* AppStyles.cs
-mai ye update krde */
-.form input,
-.form select {
-  padding: 12px;
-  font-size: 15px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 6px;
-  background: #f8fafc;
-  transition: 0.2s;
-  color: black;
-}
+
 /* Post Job form wrapper (same style as login) */
 .post-job-container {
   max-width: 420px;
@@ -218,7 +210,6 @@ mai ye update krde */
 .post-job-container input,
 .post-job-container textarea {
   width: 350px;
-  /* margin-right: 50px; */
   padding: 12px 14px;
   margin-bottom: 15px;
   border: 1px solid #e5e7eb;
@@ -263,7 +254,6 @@ mai ye update krde */
   transform: translateY(-2px);
 }
 
-
 /* ================= JOBS LIST STYLING ================= */
 
 .jobs-list {
@@ -271,6 +261,7 @@ mai ye update krde */
   margin: 50px auto;
   padding: 20px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center; /* ✅ Center align */
 }
 
 .jobs-list h2 {
@@ -290,6 +281,31 @@ mai ye update krde */
   background: #3b82f6; /* bright blue */
   margin: 12px auto 0;
   border-radius: 4px;
+}
+
+/* ✅ Centered Search + Filter */
+.jobs-filters {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin: 20px auto 30px;
+  max-width: 600px;
+}
+
+.jobs-filters input,
+.jobs-filters select {
+  padding: 8px 12px;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.jobs-filters input:focus,
+.jobs-filters select:focus {
+  outline: none;
+  border-color: #6c63ff;
+  box-shadow: 0 0 4px rgba(108, 99, 255, 0.4);
 }
 
 .jobs-list ul {
@@ -379,5 +395,13 @@ mai ye update krde */
   }
   .job-card h3 {
     font-size: 1.25rem;
+  }
+  .jobs-filters {
+    flex-direction: column;
+    max-width: 100%;
+  }
+  .jobs-filters input,
+  .jobs-filters select {
+    width: 100%;
   }
 }

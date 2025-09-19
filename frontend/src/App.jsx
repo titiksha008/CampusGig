@@ -3,12 +3,12 @@ import { useState, useEffect } from "react";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import JobsList from "./pages/JobsList";
-import AcceptedJobsDashboard from "./pages/AcceptedJobsDashboard"; // accepted jobs dashboard
+import AcceptedJobsDashboard from "./pages/AcceptedJobsDashboard";
 import Dashboard from "./pages/Dashboard";
 import Navbar from "./pages/Navbar";
 import PostJob from "./pages/PostJob";
 import Profile from "./pages/Profile";
-import api from "./services/api";   // ✅ import api to fetch current user
+import api from "./services/api";   // ✅ for fetching current user
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -33,12 +33,13 @@ export default function App() {
 
       <div style={{ paddingTop: "80px" }}>
         <Routes>
-          <Route path="/" element={<JobsList setUser={setUser} />} /> {/* Pass setUser */}
-          <Route path="/accepted" element={<AcceptedJobsDashboard />} /> {/* Accepted jobs dashboard */}
+          <Route path="/" element={<JobsList setUser={setUser} />} />
+          <Route path="/accepted" element={<AcceptedJobsDashboard />} />
           <Route path="/post-job" element={<PostJob />} />
-          <Route path="/login" element={<Login setUser={setUser} />} /> {/* Let login set the user */}
+          <Route path="/login" element={<Login setUser={setUser} />} />
           <Route path="/signup" element={<Signup setUser={setUser} />} />
-          <Route path="/profile" element={<Profile user={user} setUser={setUser} />} /> {/* Profile uses shared user */}
+          <Route path="/profile" element={<Profile user={user} setUser={setUser} />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route
             path="/welcome"
             element={

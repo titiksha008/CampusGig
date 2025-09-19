@@ -1,10 +1,5 @@
-
-
-
-
-
 import express from "express";
-import Job from "../models/job.js";
+import Job from "../models/Job.js";
 import AssignedJob from "../models/AssignedJob.js";
 import { auth } from "../middleware/auth.middleware.js";
 import User from "../models/User.js"; // ✅ import User model
@@ -33,13 +28,26 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// ------------------- Get All Unaccepted Jobs -------------------
+// ------------------- Get Jobs (unaccepted + filters) -------------------
 router.get("/", async (req, res) => {
   try {
-    // ✅ filter: only jobs that are not accepted
-    const jobs = await Job.find({ acceptedBy: null })
-      .populate("postedBy", "name email");
+    const { search, role } = req.query;
+    let filter = { acceptedBy: null }; // ✅ only jobs not accepted
 
+    // 🔎 Search by title OR description
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    // 🎭 Filter by category/role
+    if (role && role !== "") {
+      filter.category = { $regex: role, $options: "i" };
+    }
+
+    const jobs = await Job.find(filter).populate("postedBy", "name email");
     res.json(jobs);
   } catch (err) {
     console.error("Error fetching jobs:", err);
@@ -48,7 +56,7 @@ router.get("/", async (req, res) => {
 });
 
 // ------------------- Accept Job -------------------
-router.post("/:id/accept", auth, async (req, res) => {
+router.put("/:id/accept", auth, async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: "Job not found" });
