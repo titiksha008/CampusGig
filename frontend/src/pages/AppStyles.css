@@ -394,6 +394,7 @@ mai ye update krde */
   background-size: 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
   color: #374151;
+  /* Added a tiny comment for Git */
 }
 
 .nav-search:hover {
@@ -420,7 +421,7 @@ mai ye update krde */
   cursor: pointer;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
   color: #374151;
-
+  /* Tiny comment added for Git */
 }
 
 .nav-filter:hover {
@@ -431,3 +432,4 @@ mai ye update krde */
   border-color: #4cafef;
   box-shadow: 0 0 6px rgba(76, 175, 239, 0.4);
 }
+
