@@ -1,13 +1,14 @@
+// app.jsx (frontend)
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
-// import AcceptedJobsDashboard from "./pages/AcceptedJobsDashboard"; 
 import Dashboard from "./pages/Dashboard";
 import Navbar from "./pages/Navbar";
 import Profile from "./pages/Profile";
 import JobsList from "./pages/JobsList";
 import PostJob from "./pages/PostJob";
+import AcceptedJobs from "./pages/AcceptedJobs"; // ✅ import the page
 
 export default function App() {
   return (
@@ -19,7 +20,7 @@ export default function App() {
         <div style={{ paddingTop: "80px" }}>
           <Routes>
             <Route path="/" element={<JobsList />} />
-            {/* <Route path="/accepted" element={<AcceptedJobsDashboard />} /> */}
+            <Route path="/accepted-jobs" element={<AcceptedJobs />} /> {/* ✅ new route */}
             <Route path="/post-job" element={<PostJob />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />

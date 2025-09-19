@@ -1,88 +1,66 @@
-// jobsList.js
-
+// src/pages/JobsList.jsx
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import "./AppStyles.css";
 
 export default function JobsList() {
   const [jobs, setJobs] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
+  const [role, setRole] = useState("");
 
-  // Fetch jobs whenever search or roleFilter changes
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         const res = await api.get("/jobs", {
-          params: {
-            search: search,
-            role: roleFilter, // send selected category to backend
-          },
+          params: { search, role }
         });
         setJobs(res.data);
-
-        // ✅ Collect unique categories dynamically
-        const uniqueCategories = [
-          ...new Set(res.data.map((job) => job.category?.toLowerCase())),
-        ];
-        setCategories(uniqueCategories);
       } catch (err) {
         console.error("Error fetching jobs:", err);
       }
     };
     fetchJobs();
-  }, [search, roleFilter]);
+  }, [search, role]);
 
-  // ✅ Accept job
   const handleAccept = async (jobId) => {
     try {
       await api.put(`/jobs/${jobId}/accept`);
+      // ✅ remove job instantly from state
+      setJobs((prev) => prev.filter((j) => j._id !== jobId));
       alert("Job accepted successfully!");
-      setJobs((prev) => prev.filter((job) => job._id !== jobId));
     } catch (err) {
-      alert("Failed to accept job.");
+      console.error("Error accepting job:", err.response?.data || err.message);
+      alert(`Failed to accept job: ${err.response?.data?.message || err.message}`);
     }
   };
 
-  // ✅ Pass job
   const handlePass = async (jobId) => {
     try {
       await api.post(`/jobs/${jobId}/pass`);
-      alert("Job passed successfully!");
-      setJobs((prev) => prev.filter((job) => job._id !== jobId));
+      // ✅ remove job instantly from state
+      setJobs((prev) => prev.filter((j) => j._id !== jobId));
+      alert("You passed this job.");
     } catch (err) {
-      alert("Failed to pass job.");
+      console.error("Error passing job:", err.response?.data || err.message);
+      alert(`Failed to pass job: ${err.response?.data?.message || err.message}`);
     }
   };
 
   return (
     <div className="jobs-list">
       <h2>Available Jobs</h2>
-
-      {/* ✅ Search Bar + Filter Container */}
-      <div className="jobs-filters">
-        <input
-          type="text"
-          placeholder="Search jobs..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="nav-search"
-        />
-
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="nav-filter"
-        >
-          <option value="">All Roles</option>
-          {categories.map((cat, index) => (
-            <option key={index} value={cat}>
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </option>
-          ))}
-        </select>
-      </div>
+      <input
+        type="text"
+        placeholder="Search jobs..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      <select value={role} onChange={(e) => setRole(e.target.value)}>
+        <option value="">All Roles</option>
+        <option value="coding">Coding</option>
+        <option value="design">Design</option>
+        <option value="writing">Writing</option>
+      </select>
 
       {jobs.length === 0 ? (
         <p>No jobs posted yet.</p>
@@ -100,16 +78,19 @@ export default function JobsList() {
               </p>
               <p>
                 <strong>Deadline:</strong>{" "}
-                {new Date(job.deadline).toLocaleDateString()}
+                {job.deadline ? new Date(job.deadline).toLocaleDateString() : "No deadline"}
               </p>
               <p>
-                <strong>Posted by:</strong> {job.postedBy?.name || "Anonymous"}
+                <strong>Posted by:</strong> {job.postedBy?.name}
               </p>
 
-              {/* Accept / Pass buttons */}
               <div className="job-actions">
-                <button onClick={() => handleAccept(job._id)}>Accept</button>
-                <button onClick={() => handlePass(job._id)}>Pass</button>
+                <button className="nav-btn signup-btn" onClick={() => handleAccept(job._id)}>
+                  Accept
+                </button>
+                <button className="nav-btn" onClick={() => handlePass(job._id)}>
+                  Pass
+                </button>
               </div>
             </li>
           ))}

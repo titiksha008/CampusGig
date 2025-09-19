@@ -31,6 +31,7 @@ export default function Navbar() {
       <div className="nav-center">
         <Link to="/">Jobs</Link>
         <Link to="/post-job">Post Job</Link>
+        {loggedIn && <Link to="/accepted-jobs">Accepted Jobs</Link>}
       </div>
 
       <div className="nav-right">
