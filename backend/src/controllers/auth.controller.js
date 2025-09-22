@@ -156,7 +156,8 @@
 // });
 
 //   res.status(200).json({ message: "Logged out successfully" });
-// };// auth.controller.js
+// };
+// // auth.controller.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";

@@ -405,3 +405,84 @@ body {
     width: 100%;
   }
 }
+/* ================= MY JOBS PAGE STYLING ================= */
+
+.my-jobs-container {
+  max-width: 1100px;
+  margin: 100px auto 50px; /* added top margin for fixed navbar */
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.my-jobs-container h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+  color: #1e3a8a;
+}
+
+.my-jobs-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.my-job-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.my-job-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.my-job-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.my-job-card p {
+  margin: 4px 0;
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.job-status {
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.job-status.accepted {
+  background-color: #dcfce7; /* light green */
+  color: #166534; /* dark green */
+}
+
+.job-status.pending {
+  background-color: #fef9c3; /* light yellow */
+  color: #78350f; /* dark yellow/orange */
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .my-job-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

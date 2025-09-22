@@ -1,4 +1,77 @@
 
+// // // models/User.js
+// // import mongoose from "mongoose";
+
+// // const userSchema = new mongoose.Schema(
+// //   {
+// //     name: { type: String, required: true },
+// //     email: { type: String, required: true, unique: true },
+// //     password: { type: String, required: true }, // hashed password
+// //     role: { type: String, enum: ["employer", "freelancer"], required: true },
+// //     collegeId: { type: String, required: true },
+// //     branch: { type: String },
+// //     year: { type: String },
+
+// //     // Profile-related fields
+// //     bio: { type: String, default: "" },
+// //     profilePic: { type: String, default: "" },
+
+// //     // Skills & Portfolio
+// //     skills: [{ type: String }],
+// //     portfolio: [
+// //       {
+// //         title: { type: String },
+// //         img: { type: String },
+// //         link: { type: String }
+// //       }
+// //     ],
+
+// //     // Campus gigs / tasks completed
+// //     tasksDone: [
+// //       {
+// //         title: { type: String },
+// //         status: { type: String, enum: ["Ongoing", "Completed"], default: "Ongoing" }
+// //       }
+// //     ],
+
+// //     // Contacts / Social Links
+// //     contacts: {
+// //       github: { type: String },
+// //       linkedin: { type: String },
+// //       email: { type: String }
+// //     },
+
+// //     // Ratings & Badges
+// //     rating: { type: Number, default: 0 },
+// //     badges: [String]
+// //   },
+// //   { timestamps: true }
+// // );
+
+// // export default mongoose.model("User", userSchema);
+
+// // //models/User.js
+// // import mongoose from "mongoose";
+
+// // const userSchema = new mongoose.Schema(
+// //   {
+// //     name: { type: String, required: true },
+// //     email: { type: String, required: true, unique: true },
+// //     password: { type: String, required: true }, // hashed
+// //     role: { type: String, enum: ["employer", "freelancer"], required: true },
+// //     collegeId: { type: String, required: true },
+// //     branch: String,
+// //     year: String,
+// //     skills: [String],
+// //     portfolio: String,
+// //     rating: { type: Number, default: 0 },
+// //     badges: [String]
+// //   },
+// //   { timestamps: true }
+// // );
+
+// // export default mongoose.model("User", userSchema);
+
 // // models/User.js
 // import mongoose from "mongoose";
 
@@ -10,11 +83,17 @@
 //     role: { type: String, enum: ["employer", "freelancer"], required: true },
 //     collegeId: { type: String, required: true },
 //     branch: { type: String },
+//     college: { type: String },
 //     year: { type: String },
 
 //     // Profile-related fields
 //     bio: { type: String, default: "" },
 //     profilePic: { type: String, default: "" },
+
+//     // Ratings & Badges
+//     rating: { type: Number, default: 0 },
+//     badges: [String],
+//     jobsPosted: { type: Number, default: 0 } , // ✅ add this
 
 //     // Skills & Portfolio
 //     skills: [{ type: String }],
@@ -36,34 +115,13 @@
 
 //     // Contacts / Social Links
 //     contacts: {
+//       phone: { type: String },  
 //       github: { type: String },
 //       linkedin: { type: String },
 //       email: { type: String }
 //     },
 
 //     // Ratings & Badges
-//     rating: { type: Number, default: 0 },
-//     badges: [String]
-//   },
-//   { timestamps: true }
-// );
-
-// export default mongoose.model("User", userSchema);
-
-// //models/User.js
-// import mongoose from "mongoose";
-
-// const userSchema = new mongoose.Schema(
-//   {
-//     name: { type: String, required: true },
-//     email: { type: String, required: true, unique: true },
-//     password: { type: String, required: true }, // hashed
-//     role: { type: String, enum: ["employer", "freelancer"], required: true },
-//     collegeId: { type: String, required: true },
-//     branch: String,
-//     year: String,
-//     skills: [String],
-//     portfolio: String,
 //     rating: { type: Number, default: 0 },
 //     badges: [String]
 //   },
@@ -90,10 +148,9 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, default: "" },
     profilePic: { type: String, default: "" },
 
-    // Ratings & Badges
-    rating: { type: Number, default: 0 },
-    badges: [String],
-    jobsPosted: { type: Number, default: 0 } , // ✅ add this
+    // ✅ Track jobs
+    jobsPosted: { type: Number, default: 0 },
+    jobsAccepted: { type: Number, default: 0 }, // <-- add this field
 
     // Skills & Portfolio
     skills: [{ type: String }],
@@ -115,7 +172,7 @@ const userSchema = new mongoose.Schema(
 
     // Contacts / Social Links
     contacts: {
-      phone: { type: String },  
+      phone: { type: String },
       github: { type: String },
       linkedin: { type: String },
       email: { type: String }

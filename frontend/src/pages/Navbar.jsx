@@ -32,6 +32,7 @@ export default function Navbar() {
         <Link to="/">Jobs</Link>
         <Link to="/post-job">Post Job</Link>
         {loggedIn && <Link to="/accepted-jobs">Accepted Jobs</Link>}
+        {loggedIn && <Link to="/my-jobs">My Jobs</Link>} {/* ✅ Added link */}
       </div>
 
       <div className="nav-right">
