@@ -168,13 +168,40 @@
 //   }
 // });
 
-// export default router;
+// export default router;import express from "express";
 import express from "express";
 import Job from "../models/Job.js";
 import AssignedJob from "../models/AssignedJob.js";
 import { auth } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
+
+/**
+ * ------------------- POST Job (create a new job) -------------------
+ */
+router.post("/", auth, async (req, res) => {
+  try {
+    const { title, description, category, price, deadline } = req.body;
+
+    if (!title || !description || !category || !price || !deadline) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const job = await Job.create({
+      title,
+      description,
+      category,
+      price,
+      deadline,
+      postedBy: req.user._id, // link job to logged-in user
+    });
+
+    res.status(201).json({ message: "Job posted successfully", job });
+  } catch (err) {
+    console.error("Error posting job:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 /**
  * ------------------- GET Jobs (only unaccepted) -------------------
