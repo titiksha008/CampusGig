@@ -1,16 +1,40 @@
+// models/AssignedJob.js
 import mongoose from "mongoose";
 
-const assignedJobSchema = new mongoose.Schema({
-  job: { type: mongoose.Schema.Types.ObjectId, ref: "Job", required: true },
-  student: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  
-  // extra denormalized fields (for clarity in MongoDB Atlas)
-  jobTitle: { type: String, required: true },
-  studentName: { type: String, required: true },
-  studentEmail: { type: String, required: true },
+const AssignedJobSchema = new mongoose.Schema({
+  job: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Job",
+    required: true,
+  },
+  student: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["accepted", "completed", "rated"],
+    default: "accepted",
+  },
+  assignedAt: {
+    type: Date,
+    default: Date.now,
+  },
 
-  status: { type: String, enum: ["accepted", "passed"], required: true },
-  assignedAt: { type: Date, default: Date.now }
+  // ⭐️ New fields
+ rating: {
+  type: Number,
+  min: 1,
+  max: 5,
+  default: null, // important
+},
+
+  review: {
+    type: String,
+    trim: true,
+  },
 });
 
-export default mongoose.model("AssignedJob", assignedJobSchema);
+const AssignedJob = mongoose.model("AssignedJob", AssignedJobSchema);
+export default AssignedJob;

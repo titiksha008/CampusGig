@@ -1,109 +1,191 @@
+// // src/pages/MyJobs.jsx
+// import { useEffect, useState } from "react";
+// import api from "../services/api";
+// import Navbar from "./Navbar";
+// import { useAuth } from "../context/AuthContext";
+
+// const MyJobs = ({ onProfileUpdate }) => {
+//   const { user, loading } = useAuth();
+//   const [jobs, setJobs] = useState([]);
+//   const [jobsLoading, setJobsLoading] = useState(true);
+
+//   useEffect(() => {
+//     if (!loading && user) {
+//       fetchJobs();
+//     }
+//   }, [loading, user]);
+
+//   const fetchJobs = async () => {
+//     try {
+//       const res = await api.get("/jobs/my"); // fetch jobs of current user
+//       setJobs(res.data);
+//     } catch (err) {
+//       console.error("Error fetching jobs:", err);
+//     } finally {
+//       setJobsLoading(false);
+//     }
+//   };
+
+//   // Handle rating a job
+//   const handleRate = async (jobId) => {
+//     try {
+//       const rating = parseInt(prompt("Enter rating (1-5):"));
+//       const review = prompt("Write a review (optional):");
+
+//       if (!rating || rating < 1 || rating > 5) {
+//         alert("Invalid rating. Please enter 1-5.");
+//         return;
+//       }
+
+//       await api.put(`/jobs/${jobId}/rate`, { rating, review });
+//       fetchJobs(); // refresh jobs
+//       if (onProfileUpdate) onProfileUpdate(); // refresh profile stats
+//     } catch (err) {
+//       console.error("Failed to rate job:", err);
+//       alert("Error rating job.");
+//     }
+//   };
+
+//   if (jobsLoading) return <p>Loading jobs...</p>;
+
+//   return (
+//     <div>
+//       <Navbar />
+//       <div className="jobs-list p-6">
+//         <h2 className="text-2xl font-bold mb-4">My Jobs</h2>
+
+//         {jobs.length === 0 ? (
+//           <p>No jobs posted yet.</p>
+//         ) : (
+//           <div className="job-grid grid gap-4">
+//             {jobs.map((job) => (
+//               <div
+//                 key={job._id}
+//                 className="job-card p-4 border rounded-lg shadow bg-white"
+//               >
+//                 <h3 className="text-lg font-semibold">{job.title}</h3>
+//                 <p className="text-gray-700">{job.description}</p>
+//                 <p className="mt-2 text-sm">
+//                   <strong>Status:</strong>{" "}
+//                   {job.status === "pending"
+//                     ? "Not yet accepted"
+//                     : job.status === "accepted"
+//                     ? `Accepted by ${job.acceptedBy?.name || "someone"}`
+//                     : job.status === "completed"
+//                     ? "Completed"
+//                     : job.status === "rated"
+//                     ? "Rated (Completed)"
+//                     : "Unknown"}
+//                 </p>
+
+//                 {/* ⭐️ Rate button */}
+//                 {job.status === "completed" && (
+//                   <button
+//                     className="btn-complete mt-2 px-3 py-1 bg-blue-500 text-white rounded"
+//                     onClick={() => handleRate(job._id)}
+//                   >
+//                     Rate Work
+//                   </button>
+//                 )}
+//               </div>
+//             ))}
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default MyJobs;
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import Navbar from "./Navbar";
 import { useAuth } from "../context/AuthContext";
 
-const MyJobs = () => {
+const MyJobs = ({ onProfileUpdate }) => {
   const { user, loading } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
-  const [rating, setRating] = useState({}); // track rating input for each job
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user) return;
+    if (!loading && user) {
+      fetchJobs();
+    }
+  }, [loading, user]);
 
-    const fetchMyJobs = async () => {
-      try {
-        const res = await api.get("/jobs/my");
-        setJobs(res.data);
-      } catch (err) {
-        console.error("Error fetching my jobs:", err);
-      } finally {
-        setJobsLoading(false);
-      }
-    };
-    fetchMyJobs();
-  }, [user]);
-
-  const handleRate = async (jobId) => {
+  const fetchJobs = async () => {
     try {
-      if (!rating[jobId]) return alert("Please enter a rating between 1-5");
-      const res = await api.post(`/jobs/${jobId}/rate`, { rating: Number(rating[jobId]) });
-      alert("Rating submitted successfully!");
-      // refresh jobs list
-      setJobs((prev) =>
-        prev.map((job) =>
-          job._id === jobId ? { ...job, acceptedBy: { ...job.acceptedBy }, status: "rated" } : job
-        )
-      );
+      setJobsLoading(true);
+      const res = await api.get("/jobs/my"); // fetch jobs for this user
+      setJobs(res.data);
     } catch (err) {
-      console.error(err);
-      alert("Failed to submit rating");
+      console.error("Error fetching jobs:", err);
+      setError("Failed to fetch jobs");
+    } finally {
+      setJobsLoading(false);
     }
   };
 
-  if (loading || jobsLoading)
-    return <p className="text-center mt-6">Loading your jobs...</p>;
+  const handleRate = async (assignedJobId) => {
+    try {
+      const rating = parseFloat(prompt("Enter rating (1-5)"));
+      const review = prompt("Enter review");
+
+      if (!rating || rating < 1 || rating > 5) {
+        return alert("Invalid rating. Must be between 1 and 5.");
+      }
+
+      await api.put(`/jobs/${assignedJobId}/rate`, { rating, review });
+      fetchJobs(); // refresh jobs list
+      if (onProfileUpdate) onProfileUpdate(); // refresh profile stats
+      alert("Job rated successfully!");
+    } catch (err) {
+      console.error("Error rating job:", err);
+      alert(err.response?.data?.message || "Error rating job. Please try again.");
+    }
+  };
+
+  if (jobsLoading) return <p>Loading jobs...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
     <div>
       <Navbar />
-      <div className="my-jobs-container">
-        <h2>My Posted Jobs</h2>
+      <div className="jobs-list">
+        <h2>My Jobs</h2>
         {jobs.length === 0 ? (
-          <p>You haven’t posted any jobs yet.</p>
+          <p>No jobs posted yet.</p>
         ) : (
-          <ul className="my-jobs-list">
+          <div className="job-grid">
             {jobs.map((job) => (
-              <li key={job._id} className="my-job-card">
-                <div>
-                  <h3>{job.title}</h3>
-                  <p>{job.description}</p>
-                  <p>Posted on {new Date(job.createdAt).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  {job.acceptedBy ? (
-                    <span className={`job-status accepted`}>
-                      {job.status === "completed" || job.status === "rated"
-                        ? "Completed by " + job.acceptedBy.name
-                        : "Accepted by " + job.acceptedBy.name}
-                    </span>
-                  ) : (
-                    <span className="job-status pending">Not yet accepted</span>
-                  )}
-                  {/* Rating input */}
-                  {job.acceptedBy && job.status === "completed" && (
-                    <div style={{ marginTop: "8px" }}>
-                      <input
-                        type="number"
-                        min="1"
-                        max="5"
-                        placeholder="Rate 1-5"
-                        value={rating[job._id] || ""}
-                        onChange={(e) =>
-                          setRating({ ...rating, [job._id]: e.target.value })
-                        }
-                        style={{ padding: "4px 6px", width: "60px", marginRight: "8px" }}
-                      />
-                      <button
-                        onClick={() => handleRate(job._id)}
-                        style={{
-                          padding: "6px 12px",
-                          borderRadius: "6px",
-                          background: "#7c3aed",
-                          color: "#fff",
-                          border: "none",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Submit
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </li>
+              <div key={job._id} className="job-card">
+                <h3>{job.title}</h3>
+                <p>{job.description}</p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {job.status === "pending"
+                    ? "Not yet accepted"
+                    : job.status === "accepted"
+                    ? `Accepted by ${job.acceptedBy?.name || "someone"}`
+                    : job.status === "completed"
+                    ? "Completed"
+                    : job.status === "rated"
+                    ? "Rated (Completed)"
+                    : "Unknown"}
+                </p>
+
+                {job.status === "completed" && job.assignedJobId && (
+                  <button
+                    className="btn-complete"
+                    onClick={() => handleRate(job.assignedJobId)}
+                  >
+                    Rate Work
+                  </button>
+                )}
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>

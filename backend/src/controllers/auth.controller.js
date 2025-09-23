@@ -157,46 +157,32 @@
 
 //   res.status(200).json({ message: "Logged out successfully" });
 // };
-// // auth.controller.js
+// // auth.controller.js// controllers/auth.controller.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Job from "../models/Job.js";
+import AssignedJob from "../models/AssignedJob.js";
 
-// Generate JWT and set cookie
 const generateToken = (res, userId) => {
-  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: "7d", // token expiry
-  });
-
-  // ✅ Set token in HTTP-only cookie
+  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production" ? true : false, 
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "none", 
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
-
-  return token; // optional, if you ever want to return token too
+  return token;
 };
 
-// Signup
 export const signup = async (req, res) => {
   try {
     const { name, email, password, role, collegeId } = req.body;
-
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: "User already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      name,
-      email,
-      password: hashed,
-      role,
-      collegeId,
-    });
-
-    // ✅ set cookie
+    const user = await User.create({ name, email, password: hashed, role, collegeId });
     generateToken(res, user._id);
 
     res.status(201).json({
@@ -209,7 +195,6 @@ export const signup = async (req, res) => {
   }
 };
 
-// Login
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -219,63 +204,78 @@ export const login = async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(400).json({ message: "Invalid credentials" });
 
-    // ✅ set cookie
     generateToken(res, user._id);
 
-    res.json({
-      message: "Login successful",
-      user: { id: user._id, name: user.name, role: user.role },
-    });
+    res.json({ message: "Login successful", user: { id: user._id, name: user.name, role: user.role } });
   } catch (e) {
     console.error("Login error:", e.message);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// Get current user (requires auth middleware)
+// Me route: fetch user + stats
+// Me route: fetch user + stats
 export const me = async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-    res.json({ user: req.user });
-  } catch (e) {
-    console.error("Me error:", e.message);
+
+    const user = await User.findById(req.user._id).lean();
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // 1️⃣ Jobs where this student has been rated
+    const jobs = await AssignedJob.find({ student: user._id, rating: { $ne: null } });
+
+    // 2️⃣ Calculate average rating
+    let avgRating = 0;
+    if (jobs.length > 0) {
+      const total = jobs.reduce((acc, j) => acc + Number(j.rating), 0); // convert to number just in case
+      avgRating = total / jobs.length;
+    }
+
+    // 3️⃣ Other stats
+    const jobsPosted = await Job.countDocuments({ postedBy: user._id });
+    const jobsAccepted = await AssignedJob.countDocuments({ student: user._id });
+
+    const earningsAgg = await AssignedJob.aggregate([
+      { $match: { student: user._id } },
+      { $lookup: { from: "jobs", localField: "job", foreignField: "_id", as: "job" } },
+      { $unwind: "$job" },
+      { $group: { _id: null, total: { $sum: "$job.price" } } },
+    ]);
+    const earnings = earningsAgg[0]?.total || 0;
+
+    // 4️⃣ Send final response
+    res.json({
+      user,
+      jobsPosted,
+      jobsAccepted,
+      earnings,
+      rating: Number(avgRating.toFixed(1)), // numeric value
+    });
+  } catch (err) {
+    console.error("Me error:", err.message);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// Update profile (requires auth middleware)
+
+
+
 export const updateProfile = async (req, res) => {
   try {
-    console.log("req.user:", req.user);
-    console.log("req.body:", req.body);
-
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-    // ✅ use _id instead of id
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      req.body,
-      { new: true, runValidators: true }
-    ).select("-password");
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, req.body, { new: true, runValidators: true }).select("-password");
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json(updatedUser);
+    res.json({ user: updatedUser });
   } catch (e) {
     console.error("Update profile error:", e.message);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// Logout
 export const logout = (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production" ? true : false,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "none",
-  });
-
+  res.clearCookie("token", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: process.env.NODE_ENV === "production" ? "none" : "lax" });
   res.status(200).json({ message: "Logged out successfully" });
 };
