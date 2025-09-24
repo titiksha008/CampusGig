@@ -12,7 +12,7 @@ export const auth = async (req, res, next) => {
       return res.status(401).json({ message: "No token provided" });
     }
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET); // ✅ works now
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
     console.log("🔑 Decoded payload:", payload);
 
     const user = await User.findById(payload.id).select("-password");
