@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+//config/db.js
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 import mongoose from "mongoose";
 
 export const connectDB = async () => {
@@ -8,4 +12,8 @@ export const connectDB = async () => {
     console.error("❌ DB Error:", error.message);
     process.exit(1);
   }
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6

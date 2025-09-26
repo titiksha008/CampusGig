@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+//pages/Dashboard.jsx
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import "./AppStyles.css";
@@ -27,6 +31,12 @@ export default function Dashboard() {
       ) : (
         <p className="error-message">You are not logged in.</p>
       )}
+<<<<<<< HEAD
     </div>
   );
 }
+=======
+    </div>
+  );
+}
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6

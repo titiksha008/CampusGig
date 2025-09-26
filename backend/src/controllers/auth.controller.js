@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // // import bcrypt from "bcryptjs";
 // // import jwt from "jsonwebtoken";
 // // import User from "../models/User.js";
@@ -178,11 +179,55 @@ const generateToken = (res, userId) => {
 export const signup = async (req, res) => {
   try {
     const { name, email, password, role, collegeId } = req.body;
+=======
+
+//auth.controller.js
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import AssignedJob from "../models/AssignedJob.js";
+import Job from "../models/Jobs.js";
+
+// Generate JWT and set cookie
+const generateToken = (res, userId) => {
+  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "7d", // token expiry
+  });
+
+  // Set token in HTTP-only cookie
+  res.cookie("token", token, {
+    httpOnly: true,
+    // secure: process.env.NODE_ENV === "production", // HTTPS only in production
+    secure:true,
+    // sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    sameSite: "none", 
+    maxAge: 24 * 60 * 60 * 1000, // 7 days
+  });
+};
+
+// Signup
+export const signup = async (req, res) => {
+  try {
+    const { name, email, password, role, collegeId } = req.body;
+
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: "User already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
+<<<<<<< HEAD
     const user = await User.create({ name, email, password: hashed, role, collegeId });
+=======
+    const user = await User.create({
+      name,
+      email,
+      password: hashed,
+      role,
+      collegeId,
+    });
+
+    // set cookie
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     generateToken(res, user._id);
 
     res.status(201).json({
@@ -190,11 +235,19 @@ export const signup = async (req, res) => {
       user: { id: user._id, email: user.email, role: user.role },
     });
   } catch (e) {
+<<<<<<< HEAD
     console.error("Signup error:", e.message);
     res.status(500).json({ message: "Server error" });
   }
 };
 
+=======
+    res.status(500).json({ error: e.message });
+  }
+};
+
+// Login
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -204,6 +257,7 @@ export const login = async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(400).json({ message: "Invalid credentials" });
 
+<<<<<<< HEAD
     generateToken(res, user._id);
 
     res.json({ message: "Login successful", user: { id: user._id, name: user.name, role: user.role } });
@@ -215,10 +269,29 @@ export const login = async (req, res) => {
 
 // Me route: fetch user + stats
 // Me route: fetch user + stats
+=======
+    // set cookie
+    generateToken(res, user._id);
+
+    res.json({
+      message: "Login successful",
+      user: { id: user._id, name: user.name, role: user.role },
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
+// Get current user + stats
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 export const me = async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
+<<<<<<< HEAD
+=======
+    // Fetch full user from DB
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     const user = await User.findById(req.user._id).lean();
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -228,7 +301,11 @@ export const me = async (req, res) => {
     // 2️⃣ Calculate average rating
     let avgRating = 0;
     if (jobs.length > 0) {
+<<<<<<< HEAD
       const total = jobs.reduce((acc, j) => acc + Number(j.rating), 0); // convert to number just in case
+=======
+      const total = jobs.reduce((acc, j) => acc + Number(j.rating), 0); // convert to number
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
       avgRating = total / jobs.length;
     }
 
@@ -244,21 +321,34 @@ export const me = async (req, res) => {
     ]);
     const earnings = earningsAgg[0]?.total || 0;
 
+<<<<<<< HEAD
     // 4️⃣ Send final response
+=======
+    // 4️⃣ Send response with stats
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     res.json({
       user,
       jobsPosted,
       jobsAccepted,
       earnings,
+<<<<<<< HEAD
       rating: Number(avgRating.toFixed(1)), // numeric value
     });
   } catch (err) {
     console.error("Me error:", err.message);
     res.status(500).json({ message: "Server error" });
+=======
+      rating: Number(avgRating.toFixed(1)), // numeric with 1 decimal
+    });
+  } catch (e) {
+    console.error("Me error:", e.message);
+    res.status(500).json({ error: e.message });
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
   }
 };
 
 
+<<<<<<< HEAD
 
 
 export const updateProfile = async (req, res) => {
@@ -277,5 +367,44 @@ export const updateProfile = async (req, res) => {
 
 export const logout = (req, res) => {
   res.clearCookie("token", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: process.env.NODE_ENV === "production" ? "none" : "lax" });
+=======
+// Update profile (requires auth middleware)
+export const updateProfile = async (req, res) => {
+  try {
+    console.log("req.user:", req.user);   // Log user coming from auth middleware
+    console.log("req.body:", req.body);   // Log payload from frontend
+
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    //update user in db
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      req.body,
+      { new: true, runValidators: true } // also good to enforce schema
+    ).select("-password");
+
+    console.log("updatedUser:", updatedUser);
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (e) {
+    console.error("Update profile error:", e); // ✅ log error
+    res.status(500).json({ error: e.message });
+  }
+};
+
+//logout
+export const logout = (req, res) => {
+  // res.clearCookie("token"); // clear cookie set at login
+  res.clearCookie("token", {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",  // must match cookie settings
+});
+
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
   res.status(200).json({ message: "Logged out successfully" });
 };

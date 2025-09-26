@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
+<<<<<<< HEAD
     "start": "node src/index.js"
+=======
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
   },
   "keywords": [],
   "author": "",
@@ -20,8 +25,12 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.18.0",
     "mongoose": "^8.18.0",
+<<<<<<< HEAD
     "morgan": "^1.10.1",
     "multer": "^2.0.2"
+=======
+    "morgan": "^1.10.1"
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

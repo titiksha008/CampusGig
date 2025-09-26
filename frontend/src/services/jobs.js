@@ -10,4 +10,8 @@ export const acceptJob = (id) => {
 
 export const getAcceptedJobs = () => {
   return api.get('/jobs/accepted');
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
