@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 // import { createContext, useContext, useState, useEffect } from "react";
 // import api from "../services/api";
 
@@ -28,7 +26,6 @@
 //   return useContext(AuthContext);
 // }
 
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 import { createContext, useContext, useState, useEffect } from "react";
 import api from "../services/api";
 
@@ -38,18 +35,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-<<<<<<< HEAD
-  // check if already logged in (cookies / token)
-  useEffect(() => {
-    api.get("/auth/me")
-      .then(res => setUser(res.data.user))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
-=======
   // Check if already logged in (cookies / token)
   useEffect(() => {
     api.get("/auth/me")
@@ -83,7 +68,6 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{ user, setUser: updateUser, loading }}>
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
       {children}
     </AuthContext.Provider>
   );

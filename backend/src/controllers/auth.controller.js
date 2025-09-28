@@ -1,233 +1,37 @@
-<<<<<<< HEAD
-// // import bcrypt from "bcryptjs";
-// // import jwt from "jsonwebtoken";
-// // import User from "../models/User.js";
-
-// // export const signup = async (req, res) => {
-// //   try {
-// //     const { name, email, password, role, collegeId } = req.body;
-
-// //     const exists = await User.findOne({ email });
-// //     if (exists) return res.status(400).json({ message: "User already exists" });
-
-// //     const hashed = await bcrypt.hash(password, 10);
-// //     const user = await User.create({ name, email, password: hashed, role, collegeId });
-
-// //     res.status(201).json({ message: "User created", user: { id: user._id, email: user.email } });
-// //   } catch (e) {
-// //     res.status(500).json({ error: e.message });
-// //   }
-// // };
-
-// // export const login = async (req, res) => {
-// //   try {
-// //     const { email, password } = req.body;
-// //     const user = await User.findOne({ email });
-// //     if (!user) return res.status(400).json({ message: "Invalid credentials" });
-
-// //     const ok = await bcrypt.compare(password, user.password);
-// //     if (!ok) return res.status(400).json({ message: "Invalid credentials" });
-
-// //     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-// //     res.json({ token, user: { id: user._id, name: user.name, role: user.role } });
-// //   } catch (e) {
-// //     res.status(500).json({ error: e.message });
-// //   }
-// // };
-
-// // export const me = async (req, res) => {
-// //   res.json({ user: req.user });
-// // };//auth.controller.js
-// import bcrypt from "bcryptjs";
-// import jwt from "jsonwebtoken";
-// import User from "../models/User.js";
-
-// // Generate JWT and set cookie
-// const generateToken = (res, userId) => {
-//   const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-//     expiresIn: "7d", // token expiry
-//   });
-
-//   // Set token in HTTP-only cookie
-// res.cookie("token", token, {
-//   httpOnly: true,
-//   secure: process.env.NODE_ENV === "production", // false on localhost, true on prod
-//   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
-//   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-// });
-
-// };
-
-// // Signup
-// export const signup = async (req, res) => {
-//   try {
-//     const { name, email, password, role, collegeId } = req.body;
-
-//     const exists = await User.findOne({ email });
-//     if (exists) return res.status(400).json({ message: "User already exists" });
-
-//     const hashed = await bcrypt.hash(password, 10);
-//     const user = await User.create({
-//       name,
-//       email,
-//       password: hashed,
-//       role,
-//       collegeId,
-//     });
-
-//     // set cookie
-//     generateToken(res, user._id);
-
-//     res.status(201).json({
-//       message: "User created",
-//       user: { id: user._id, email: user.email, role: user.role },
-//     });
-//   } catch (e) {
-//     res.status(500).json({ error: e.message });
-//   }
-// };
-
-// // Login
-// export const login = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-//     const user = await User.findOne({ email });
-//     if (!user) return res.status(400).json({ message: "Invalid credentials" });
-
-//     const ok = await bcrypt.compare(password, user.password);
-//     if (!ok) return res.status(400).json({ message: "Invalid credentials" });
-
-//     // set cookie
-//     generateToken(res, user._id);
-
-//     res.json({
-//       message: "Login successful",
-//       user: { id: user._id, name: user.name, role: user.role },
-//     });
-//   } catch (e) {
-//     res.status(500).json({ error: e.message });
-//   }
-// };
-
-// // Get current user (requires auth middleware)
-// export const me = async (req, res) => {
-//   try {
-//     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-//     res.json({user:req.user});
-//   } catch (e) {
-//     res.status(500).json({ error: e.message });
-//   }
-// };
-
-// // Update profile (requires auth middleware)
-// export const updateProfile = async (req, res) => {
-//   try {
-//     console.log("req.user:", req.user);   // Log user coming from auth middleware
-//     console.log("req.body:", req.body);   // Log payload from frontend
-
-//     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-//     //update user in db
-//     const updatedUser = await User.findByIdAndUpdate(
-//       req.user.id,
-//       req.body,
-//       { new: true, runValidators: true } // also good to enforce schema
-//     ).select("-password");
-
-//     console.log("updatedUser:", updatedUser);
-
-//     if (!updatedUser) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     res.json(updatedUser);
-//   } catch (e) {
-//     console.error("Update profile error:", e); // ✅ log error
-//     res.status(500).json({ error: e.message });
-//   }
-// };
-
-// //logout
-// export const logout = (req, res) => {
-//   // res.clearCookie("token"); // clear cookie set at login
-//   res.clearCookie("token", {
-//   httpOnly: true,
-//   secure: true,
-//   sameSite: "none",  // must match cookie settings
-// });
-
-//   res.status(200).json({ message: "Logged out successfully" });
-// };
-// // auth.controller.js// controllers/auth.controller.js
+// controllers/auth.controller.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Job from "../models/Job.js";
 import AssignedJob from "../models/AssignedJob.js";
 
+// ------------------- Helper: generate JWT and set cookie -------------------
 const generateToken = (res, userId) => {
-  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
+
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production", // true on production
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
+
   return token;
 };
 
-export const signup = async (req, res) => {
-  try {
-    const { name, email, password, role, collegeId } = req.body;
-=======
-
-//auth.controller.js
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
-import AssignedJob from "../models/AssignedJob.js";
-import Job from "../models/Jobs.js";
-
-// Generate JWT and set cookie
-const generateToken = (res, userId) => {
-  const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: "7d", // token expiry
-  });
-
-  // Set token in HTTP-only cookie
-  res.cookie("token", token, {
-    httpOnly: true,
-    // secure: process.env.NODE_ENV === "production", // HTTPS only in production
-    secure:true,
-    // sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-    sameSite: "none", 
-    maxAge: 24 * 60 * 60 * 1000, // 7 days
-  });
-};
-
-// Signup
+// ------------------- Signup -------------------
 export const signup = async (req, res) => {
   try {
     const { name, email, password, role, collegeId } = req.body;
 
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: "User already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
-<<<<<<< HEAD
     const user = await User.create({ name, email, password: hashed, role, collegeId });
-=======
-    const user = await User.create({
-      name,
-      email,
-      password: hashed,
-      role,
-      collegeId,
-    });
 
-    // set cookie
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     generateToken(res, user._id);
 
     res.status(201).json({
@@ -235,19 +39,12 @@ export const signup = async (req, res) => {
       user: { id: user._id, email: user.email, role: user.role },
     });
   } catch (e) {
-<<<<<<< HEAD
     console.error("Signup error:", e.message);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-=======
-    res.status(500).json({ error: e.message });
-  }
-};
-
-// Login
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
+// ------------------- Login -------------------
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -257,20 +54,6 @@ export const login = async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(400).json({ message: "Invalid credentials" });
 
-<<<<<<< HEAD
-    generateToken(res, user._id);
-
-    res.json({ message: "Login successful", user: { id: user._id, name: user.name, role: user.role } });
-  } catch (e) {
-    console.error("Login error:", e.message);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-// Me route: fetch user + stats
-// Me route: fetch user + stats
-=======
-    // set cookie
     generateToken(res, user._id);
 
     res.json({
@@ -278,38 +61,24 @@ export const login = async (req, res) => {
       user: { id: user._id, name: user.name, role: user.role },
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error("Login error:", e.message);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Get current user + stats
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
+// ------------------- Get Current User + Stats -------------------
 export const me = async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-<<<<<<< HEAD
-=======
-    // Fetch full user from DB
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     const user = await User.findById(req.user._id).lean();
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // 1️⃣ Jobs where this student has been rated
-    const jobs = await AssignedJob.find({ student: user._id, rating: { $ne: null } });
+    const jobsRated = await AssignedJob.find({ student: user._id, rating: { $ne: null } });
+    const avgRating = jobsRated.length
+      ? jobsRated.reduce((acc, j) => acc + Number(j.rating), 0) / jobsRated.length
+      : 0;
 
-    // 2️⃣ Calculate average rating
-    let avgRating = 0;
-    if (jobs.length > 0) {
-<<<<<<< HEAD
-      const total = jobs.reduce((acc, j) => acc + Number(j.rating), 0); // convert to number just in case
-=======
-      const total = jobs.reduce((acc, j) => acc + Number(j.rating), 0); // convert to number
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
-      avgRating = total / jobs.length;
-    }
-
-    // 3️⃣ Other stats
     const jobsPosted = await Job.countDocuments({ postedBy: user._id });
     const jobsAccepted = await AssignedJob.countDocuments({ student: user._id });
 
@@ -321,41 +90,30 @@ export const me = async (req, res) => {
     ]);
     const earnings = earningsAgg[0]?.total || 0;
 
-<<<<<<< HEAD
-    // 4️⃣ Send final response
-=======
-    // 4️⃣ Send response with stats
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     res.json({
       user,
       jobsPosted,
       jobsAccepted,
       earnings,
-<<<<<<< HEAD
-      rating: Number(avgRating.toFixed(1)), // numeric value
-    });
-  } catch (err) {
-    console.error("Me error:", err.message);
-    res.status(500).json({ message: "Server error" });
-=======
-      rating: Number(avgRating.toFixed(1)), // numeric with 1 decimal
+      rating: Number(avgRating.toFixed(1)),
     });
   } catch (e) {
     console.error("Me error:", e.message);
-    res.status(500).json({ error: e.message });
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-
-<<<<<<< HEAD
-
-
+// ------------------- Update Profile -------------------
 export const updateProfile = async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-    const updatedUser = await User.findByIdAndUpdate(req.user._id, req.body, { new: true, runValidators: true }).select("-password");
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      req.body,
+      { new: true, runValidators: true }
+    ).select("-password");
+
     if (!updatedUser) return res.status(404).json({ message: "User not found" });
 
     res.json({ user: updatedUser });
@@ -365,46 +123,12 @@ export const updateProfile = async (req, res) => {
   }
 };
 
+// ------------------- Logout -------------------
 export const logout = (req, res) => {
-  res.clearCookie("token", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: process.env.NODE_ENV === "production" ? "none" : "lax" });
-=======
-// Update profile (requires auth middleware)
-export const updateProfile = async (req, res) => {
-  try {
-    console.log("req.user:", req.user);   // Log user coming from auth middleware
-    console.log("req.body:", req.body);   // Log payload from frontend
-
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-    //update user in db
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      req.body,
-      { new: true, runValidators: true } // also good to enforce schema
-    ).select("-password");
-
-    console.log("updatedUser:", updatedUser);
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json(updatedUser);
-  } catch (e) {
-    console.error("Update profile error:", e); // ✅ log error
-    res.status(500).json({ error: e.message });
-  }
-};
-
-//logout
-export const logout = (req, res) => {
-  // res.clearCookie("token"); // clear cookie set at login
   res.clearCookie("token", {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",  // must match cookie settings
-});
-
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
   res.status(200).json({ message: "Logged out successfully" });
 };

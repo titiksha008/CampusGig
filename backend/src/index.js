@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-import "dotenv/config";
-import { connectDB } from "./config/db.js";
-import app from "./app.js";
-
-const PORT = process.env.PORT || 5000;
-
-await connectDB();
-app.listen(PORT, () => console.log(`🚀 API on http://localhost:${PORT}`));
-=======
-// index.js
 import "dotenv/config";
 import { connectDB } from "./config/db.js";
 import app from "./app.js";
@@ -19,7 +8,7 @@ import Chat from "./models/Chat.js";
 
 const PORT = process.env.PORT || 5000;
 
-// Connect DB
+// Connect to MongoDB
 await connectDB();
 
 // Create HTTP server
@@ -88,5 +77,6 @@ io.on("connection", (socket) => {
 });
 
 // Start server
-server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
+server.listen(PORT, () =>
+  console.log(`🚀 Server running on http://localhost:${PORT}`)
+);

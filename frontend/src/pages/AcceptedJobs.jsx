@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import "./AppStyles.css";
+import axios from "axios";
+
+const refreshUser = async (setUser) => {
+  const res = await axios.get("http://localhost:5000/api/auth/me", { withCredentials: true });
+  setUser(res.data.user);
+};
+
 
 export default function AcceptedJobs() {
   const [jobs, setJobs] = useState([]);
@@ -23,14 +30,16 @@ export default function AcceptedJobs() {
     }
   };
 
-  const markCompleted = async (id) => {
-    try {
-      await api.put(`/jobs/${id}/complete`);
-      fetchAcceptedJobs(); // refresh after update
-    } catch (err) {
-      console.error("Error marking job completed:", err.response?.data || err.message);
-    }
-  };
+const markCompleted = async (id) => {
+  try {
+    await api.put(`/jobs/${id}/complete`);
+    fetchAcceptedJobs(); // refresh jobs
+    await refreshUser(setUser); // refresh profile counters
+  } catch (err) {
+    console.error("Error marking job completed:", err.response?.data || err.message);
+  }
+};
+
 
   if (loading) return <p>Loading your accepted jobs...</p>;
 

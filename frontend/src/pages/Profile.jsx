@@ -1,523 +1,24 @@
-<<<<<<< HEAD
-
-
-
-
-// // src/pages/Profile.jsx
-// import React, { useState, useEffect } from "react";
-// import axios from "axios";
-// import "./Profile.css";
-// import { FaGithub, FaLinkedin, FaEnvelope, FaEdit, FaPlus, FaTrash } from "react-icons/fa";
-// import Lottie from "lottie-react";
-// import ProfilePicSelector, { avatarsMap } from "../components/ProfilePicSelector";
-
-// const Profile = () => {
-//   const [user, setUser] = useState(null);
-//   const [profilePic, setProfilePic] = useState(null);
-//   const [showSelector, setShowSelector] = useState(false);
-//   const [editMode, setEditMode] = useState(false);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const [newSkill, setNewSkill] = useState("");
-//   const [newTask, setNewTask] = useState({ title: "", status: "" });
-//   const [newPortfolio, setNewPortfolio] = useState({ title: "", link: "", file: null });
-
-
-//   useEffect(() => {
-//     axios
-//       .get("http://localhost:5000/api/auth/me", { withCredentials: true })
-//       .then((res) => {
-//         setUser(res.data.user);
-//         setProfilePic(res.data.user.profilePic || null); // ✅ initialize profilePic
-//         setLoading(false);
-//       })
-//       .catch((err) => {
-//         console.error(err);
-//         setError("Failed to load the profile");
-//         setLoading(false);
-//       });
-//   }, []);
-
-
-//   const handleChange = (e) => {
-//     const { name, value, files } = e.target;
-//     if (name.startsWith("contacts.")) {
-//       const key = name.split(".")[1];
-//       setUser({ ...user, contacts: { ...user.contacts, [key]: value } || { [key]: value } });
-//     } else if (name === "portfolioFile") {
-//       setNewPortfolio({ ...newPortfolio, file: files[0] });
-//     } else {
-//       setUser({ ...user, [name]: value });
-//     }
-//   };
-
-//   // Add skill
-//   const addSkill = () => {
-//     if (!newSkill.trim()) return;
-//     setUser({ ...user, skills: [...(user.skills || []), newSkill] });
-//     setNewSkill("");
-//   };
-
-//   const removeSkill = (idx) => {
-//     setUser({ ...user, skills: user.skills.filter((_, i) => i !== idx) });
-//   };
-
-//   // Add campus gig
-//   const addTask = () => {
-//     if (!newTask.title.trim()) return;
-//     setUser({ ...user, tasksDone: [...(user.tasksDone || []), newTask] });
-//     setNewTask({ title: "", status: "" });
-//   };
-
-//   const removeTask = (idx) => {
-//     setUser({ ...user, tasksDone: user.tasksDone.filter((_, i) => i !== idx) });
-//   };
-
-//   // Add portfolio
-//   const addPortfolio = () => {
-//     if (!newPortfolio.title || (!newPortfolio.link && !newPortfolio.file)) return;
-
-//     const portfolioItem = {
-//       title: newPortfolio.title,
-//       link: newPortfolio.link || URL.createObjectURL(newPortfolio.file),
-//       fileName: newPortfolio.file?.name || null,
-//     };
-
-//     setUser({ ...user, portfolio: [...(user.portfolio || []), portfolioItem] });
-//     setNewPortfolio({ title: "", link: "", file: null });
-//   };
-
-//   const removePortfolio = (idx) => {
-//     setUser({ ...user, portfolio: user.portfolio.filter((_, i) => i !== idx) });
-//   };
-
-//   const saveProfile = () => {
-//     // ensure profilePic is string
-//     const payload = {
-//       ...user,
-//       profilePic: profilePic || "",
-//       tasksDone: user.tasksDone || [],
-//       portfolio: user.portfolio || [],
-//       skills: user.skills || [],
-//       contacts: { ...(user.contacts || {}) }// <- no overwriting,
-//     };
-
-//     axios
-//       .put("http://localhost:5000/api/auth/me", payload, { withCredentials: true })
-//       .then((res) => {
-//         setUser(res.data.user || res.data);
-//         setProfilePic(res.data.user?.profilePic || res.data?.profilePic || null);
-//         setEditMode(false);
-//       })
-//       .catch((err) => {
-//         console.error(err);
-//         setError("Failed to update profile");
-//       });
-//   };
-
-//   if (loading) return <p>Loading profile...</p>;
-//   if (error) return <p style={{ color: "red" }}>{error}</p>;
-//   if (!user) return null;
-
-//   return (
-//     <div className="profile-container">
-//       {/* Profile Header */}
-//       <div className="profile-header">
-//         <div className="profile-pic-wrapper">
-//           {profilePic ? (
-//             <Lottie
-//               animationData={avatarsMap[profilePic]}
-//               loop
-//               style={{ height: 120 }}
-//             />
-//           ) : (
-//             <img
-//               src="https://static.vecteezy.com/system/resources/previews/036/280/650/large_2x/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg"
-//               alt="Profile"
-//               className="profile-pic"
-//             />
-//           )}
-
-
-//           {/* Show avatar edit only in edit mode */}
-//           {editMode && (
-//             <button
-//               className="edit-btn"
-//               onClick={() => setShowSelector(!showSelector)}
-//             >
-//               <FaEdit />
-//             </button>
-//           )}
-//         </div>
-
-//         {editMode ? (
-//           <form
-//             className="profile-edit-form"
-//             onSubmit={(e) => {
-//               e.preventDefault();
-//               saveProfile();
-//             }}
-//           >
-//             <div className="form-group">
-//               <label htmlFor="name">Name</label>
-//               <input
-//                 type="text"
-//                 id="name"
-//                 name="name"
-//                 value={user.name || ""}
-//                 onChange={handleChange}
-//                 placeholder="Enter your full name"
-//               />
-//             </div>
-
-//             <div className="form-group">
-//               <label htmlFor="branch">Branch</label>
-//               <input
-//                 type="text"
-//                 id="branch"
-//                 name="branch"
-//                 value={user.branch || ""}
-//                 onChange={handleChange}
-//                 placeholder="Enter your branch (e.g., CSE, 3rd Year)"
-//               />
-//             </div>
-
-//             <div className="form-group">
-//               <label htmlFor="college">College</label>
-//               <input
-//                 type="text"
-//                 id="college"
-//                 name="college"
-//                 value={user.college || ""}
-//                 onChange={handleChange}
-//                 placeholder="Enter your college name"
-//               />
-//             </div>
-
-//             <div className="form-group">
-//               <label htmlFor="bio">Bio</label>
-//               <textarea
-//                 id="bio"
-//                 name="bio"
-//                 value={user.bio || ""}
-//                 onChange={handleChange}
-//                 placeholder="Write a short bio about yourself"
-//               />
-//             </div>
-
-
-//             {/* Skills */}
-//             <div className="form-group">
-//               <label>Skills</label>
-//               <div className="skills-edit">
-//                 {(user.skills || []).map((s, idx) => (
-//                   <span key={idx} className="skill-tag">
-//                     {s} <FaTrash onClick={() => removeSkill(idx)} />
-//                   </span>
-//                 ))}
-//                 <input
-//                   type="text"
-//                   value={newSkill}
-//                   onChange={(e) => setNewSkill(e.target.value)}
-//                   placeholder="Add a skill"
-//                 />
-//                 <button type="button" onClick={addSkill}>
-//                   <FaPlus />
-//                 </button>
-//               </div>
-//             </div>
-
-//             {/* Campus Gigs */}
-//             <div className="form-group">
-//               <label>Campus Gigs</label>
-//               <ul>
-//                 {(user.tasksDone || []).map((t, idx) => (
-//                   <li key={idx}>
-//                     {t.title} - {t.status} <FaTrash onClick={() => removeTask(idx)} />
-//                   </li>
-//                 ))}
-//               </ul>
-//               <input
-//                 type="text"
-//                 placeholder="Title"
-//                 value={newTask.title}
-//                 onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-//               />
-//               <input
-//                 type="text"
-//                 placeholder="Status"
-//                 value={newTask.status}
-//                 onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
-//               />
-//               <button type="button" onClick={addTask}>
-//                 Add Task
-//               </button>
-//             </div>
-
-//             {/* Portfolio */}
-//             <div className="form-group">
-//               <label>Portfolio</label>
-//               <ul>
-//                 {(user.portfolio || []).map((p, idx) => (
-//                   <li key={idx}>
-//                     <a href={p.link} target="_blank" rel="noreferrer">
-//                       {p.title}
-//                     </a>{" "}
-//                     <FaTrash onClick={() => removePortfolio(idx)} />
-//                   </li>
-//                 ))}
-//               </ul>
-//               <input
-//                 type="text"
-//                 placeholder="Project Title"
-//                 value={newPortfolio.title}
-//                 onChange={(e) => setNewPortfolio({ ...newPortfolio, title: e.target.value })}
-//               />
-//               <input
-//                 type="text"
-//                 placeholder="Link (optional)"
-//                 value={newPortfolio.link}
-//                 onChange={(e) => setNewPortfolio({ ...newPortfolio, link: e.target.value })}
-//               />
-//               <input type="file" name="portfolioFile" onChange={handleChange} />
-//               <button type="button" onClick={addPortfolio}>
-//                 Add Portfolio
-//               </button>
-//             </div>
-
-//             {/* Contacts */}
-//             <div className="form-group">
-//               <label>Phone</label>
-//               <input
-//                 type="text"
-//                 name="contacts.phone"
-//                 value={user.contacts?.phone || ""}
-//                 onChange={handleChange}
-//                 placeholder="Phone Number"
-//               />
-//               <label>GitHub</label>
-//               <input
-//                 type="text"
-//                 name="contacts.github"
-//                 value={user.contacts?.github || ""}
-//                 onChange={handleChange}
-//                 placeholder="GitHub profile link"
-//               />
-//               <label>LinkedIn</label>
-//               <input
-//                 type="text"
-//                 name="contacts.linkedin"
-//                 value={user.contacts?.linkedin || ""}
-//                 onChange={handleChange}
-//                 placeholder="LinkedIn profile link"
-//               />
-//               <label>Email</label>
-//               <input
-//                 type="email"
-//                 name="contacts.email"
-//                 value={user.contacts?.email || ""}
-//                 onChange={handleChange}
-//                 placeholder="Email"
-//               />
-//             </div>
-
-
-//             <div className="form-buttons">
-//               <button type="submit">Save</button>
-//               <button type="button" onClick={() => setEditMode(false)}>
-//                 Cancel
-//               </button>
-//             </div>
-//           </form>
-//         ) : (
-//           <>
-//             <h2>{user.name || "Your Name"}</h2>
-//             <p>
-//               {user.branch || "Branch"} | {user.college || "Chitkara Univeristy"}
-//             </p>
-//             <p className="bio">{user.bio || "Your bio goes here..."}</p>
-//             <button onClick={() => setEditMode(true)}>Edit Profile</button>
-//           </>
-//         )}
-//       </div>
-// <div className="profile-stats">
-//   <div className="stat-card">
-//     <h3>{user.jobsPosted || 0}</h3>
-//     <p>Jobs Posted</p>
-//   </div>
-//   <div className="stat-card">
-//     <h3>{user.jobsAccepted || 0}</h3>
-//     <p>Jobs Accepted</p>
-//   </div>
-//   <div className="stat-card">
-//     <h3>₹{user.earnings || 0}</h3>
-//     <p>Total Earnings</p>
-//   </div>
-//   <div className="stat-card">
-//     <h3>{user.rating || "—"}⭐</h3>
-//     <p>Rating</p>
-//   </div>
-// </div>
-//       {/* Avatar Picker */}
-//       {editMode && showSelector && (
-//         <ProfilePicSelector
-//           onSelect={(id) => {
-//             setProfilePic(id); // store selected avatar ID
-//             setUser({ ...user, profilePic: id });
-//             setShowSelector(false);
-//           }}
-//         />
-//       )}
-
-//       {/* Skills */}
-//       <div className="profile-section">
-//         <h3>Skills</h3>
-//         <div className="skills-list">
-//           {user.skills && user.skills.length > 0
-//             ? user.skills.map((skill, idx) => (
-//               <span key={idx} className="skill-tag">
-//                 {skill}
-//               </span>
-//             ))
-//             : "No skills added yet"}
-//         </div>
-//       </div>
-
-//       {/* Tasks */}
-//       <div className="profile-section">
-//         <h3>Campus Gigs Completed</h3>
-//         <ul className="task-list">
-//           {user.tasksDone && user.tasksDone.length > 0
-//             ? user.tasksDone.map((task, idx) => (
-//               <li key={idx}>
-//                 {task.title} - <b>{task.status}</b>
-//               </li>
-//             ))
-//             : "No tasks completed yet"}
-//         </ul>
-//       </div>
-
-//       {/* Portfolio */}
-//       <div className="profile-section">
-//         <h3>Portfolio</h3>
-//         <div className="portfolio-grid">
-//           {user.portfolio && user.portfolio.length > 0
-//             ? user.portfolio.map((proj, idx) => (
-//               <a
-//                 key={idx}
-//                 href={proj.link}
-//                 target="_blank"
-//                 rel="noreferrer"
-//                 className="portfolio-card"
-//               >
-//                 {/* <img src={"https://tse3.mm.bing.net/th/id/OIP.o5RKxFmuMldCHJS03SWeqQAAAA?pid=Api&P=0&h=180"} alt={proj.title} /> */}
-//                 <p>{proj.title}</p>
-//               </a>
-//             ))
-//             : "No portfolio added yet"}
-//         </div>
-//       </div>
-
-//       {/* Contact */}
-//       <div className="profile-section contacts">
-//         <h3>Contact</h3>
-
-//         <div className="contacts-row">
-//           {user.contacts?.phone && <p>{user.contacts.phone}</p>}
-
-//           <div className="contacts-icons">
-//             {user.contacts?.github && (
-//               <a
-//              href={
-//   user.contacts.github.startsWith("http")
-//     ? user.contacts.github
-//     : `https://${user.contacts.github}`
-// }
-
-//                 target="_blank"
-//                 rel="noreferrer"
-//                 title="GitHub"
-//               >
-//                 <FaGithub size={24} />
-//               </a>
-//             )}
-
-//             {user.contacts?.linkedin && (
-//               <a
-//               href={
-//   user.contacts.linkedin.startsWith("http")
-//     ? user.contacts.linkedin
-//     : `https://${user.contacts.linkedin}`
-// }
-
-//                 target="_blank"
-//                 rel="noreferrer"
-//                 title="LinkedIn"
-//               >
-//                 <FaLinkedin size={24} />
-//               </a>
-//             )}
-
-//             {user.contacts?.email && (
-//               <a href={`mailto:${user.contacts.email}`} title="Email">
-//                 <FaEnvelope size={24} />
-//               </a>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-
-
-//     </div>
-//   );
-// };
-
-// export default Profile;
-=======
 // src/pages/Profile.jsx
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Profile.css";
 import { FaGithub, FaLinkedin, FaEnvelope, FaEdit, FaPlus, FaTrash } from "react-icons/fa";
 import Lottie from "lottie-react";
 import ProfilePicSelector, { avatarsMap } from "../components/ProfilePicSelector";
-<<<<<<< HEAD
-=======
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
+import { useAuth } from "../context/AuthContext";
 
 const Profile = () => {
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useAuth();
   const [profilePic, setProfilePic] = useState(null);
   const [showSelector, setShowSelector] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!user);
   const [error, setError] = useState("");
   const [newSkill, setNewSkill] = useState("");
   const [newTask, setNewTask] = useState({ title: "", status: "" });
   const [newPortfolio, setNewPortfolio] = useState({ title: "", link: "", file: null });
 
-<<<<<<< HEAD
-  // Fetch profile + stats
-useEffect(() => {
-  const fetchProfile = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/auth/me", { withCredentials: true });
-      console.log("Profile data:", res.data);
-      setUser(res.data.user);
-      setProfilePic(res.data.user.profilePic || null);
-      setLoading(false);
-    } catch (err) {
-      console.error(err.response?.data || err);
-      setError("Failed to load the profile");
-      setLoading(false);
-    }
-  };
-  fetchProfile();
-}, []);
-
-=======
 
   useEffect(() => {
     axios
@@ -540,13 +41,12 @@ useEffect(() => {
   ];
 
   const COLORS = ["#0088FE", "#00C49F"];
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name.startsWith("contacts.")) {
       const key = name.split(".")[1];
-      setUser({ ...user, contacts: { ...user.contacts, [key]: value } || { [key]: value } });
+     setUser({ ...user, contacts: { ...(user.contacts || {}), [key]: value } });
     } else if (name === "portfolioFile") {
       setNewPortfolio({ ...newPortfolio, file: files[0] });
     } else {
@@ -595,21 +95,14 @@ useEffect(() => {
   };
 
   const saveProfile = () => {
-<<<<<<< HEAD
-=======
     // ensure profilePic is string
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     const payload = {
       ...user,
       profilePic: profilePic || "",
       tasksDone: user.tasksDone || [],
       portfolio: user.portfolio || [],
       skills: user.skills || [],
-<<<<<<< HEAD
-      contacts: { ...(user.contacts || {}) },
-=======
       contacts: { ...(user.contacts || {}) }// <- no overwriting,
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     };
 
     axios
@@ -635,15 +128,11 @@ useEffect(() => {
       <div className="profile-header">
         <div className="profile-pic-wrapper">
           {profilePic ? (
-<<<<<<< HEAD
-            <Lottie animationData={avatarsMap[profilePic]} loop style={{ height: 120 }} />
-=======
             <Lottie
               animationData={avatarsMap[profilePic]}
               loop
               style={{ height: 120 }}
             />
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
           ) : (
             <img
               src="https://static.vecteezy.com/system/resources/previews/036/280/650/large_2x/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg"
@@ -651,10 +140,6 @@ useEffect(() => {
               className="profile-pic"
             />
           )}
-<<<<<<< HEAD
-          {editMode && (
-            <button className="edit-btn" onClick={() => setShowSelector(!showSelector)}>
-=======
 
 
           {/* Show avatar edit only in edit mode */}
@@ -663,7 +148,6 @@ useEffect(() => {
               className="edit-btn"
               onClick={() => setShowSelector(!showSelector)}
             >
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
               <FaEdit />
             </button>
           )}
@@ -677,32 +161,12 @@ useEffect(() => {
               saveProfile();
             }}
           >
-<<<<<<< HEAD
-            {/* Name, Branch, College, Bio fields */}
-            <div className="form-group">
-              <label htmlFor="name">Name</label>
-              <input type="text" id="name" name="name" value={user.name || ""} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label htmlFor="branch">Branch</label>
-              <input type="text" id="branch" name="branch" value={user.branch || ""} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label htmlFor="college">College</label>
-              <input type="text" id="college" name="college" value={user.college || ""} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label htmlFor="bio">Bio</label>
-              <textarea id="bio" name="bio" value={user.bio || ""} onChange={handleChange} />
-            </div>
-
-=======
             {/* Avatar Picker */}
       {editMode && showSelector && (
         <ProfilePicSelector
           onSelect={(id) => {
             setProfilePic(id); // store selected avatar ID
-            setUser({ ...user, profilePic: id });
+             setUser((prev) => ({ ...prev, profilePic: id }));
             setShowSelector(false);
           }}
         />
@@ -755,7 +219,6 @@ useEffect(() => {
             </div>
 
 
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
             {/* Skills */}
             <div className="form-group">
               <label>Skills</label>
@@ -765,27 +228,19 @@ useEffect(() => {
                     {s} <FaTrash onClick={() => removeSkill(idx)} />
                   </span>
                 ))}
-<<<<<<< HEAD
-                <input type="text" value={newSkill} onChange={(e) => setNewSkill(e.target.value)} placeholder="Add a skill" />
-=======
                 <input
                   type="text"
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
                   placeholder="Add a skill"
                 />
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
                 <button type="button" onClick={addSkill}>
                   <FaPlus />
                 </button>
               </div>
             </div>
 
-<<<<<<< HEAD
-            {/* Tasks */}
-=======
             {/* Campus Gigs */}
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
             <div className="form-group">
               <label>Campus Gigs</label>
               <ul>
@@ -795,10 +250,6 @@ useEffect(() => {
                   </li>
                 ))}
               </ul>
-<<<<<<< HEAD
-              <input type="text" placeholder="Title" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} />
-              <input type="text" placeholder="Status" value={newTask.status} onChange={(e) => setNewTask({ ...newTask, status: e.target.value })} />
-=======
               <input
                 type="text"
                 placeholder="Title"
@@ -811,7 +262,6 @@ useEffect(() => {
                 value={newTask.status}
                 onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
               />
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
               <button type="button" onClick={addTask}>
                 Add Task
               </button>
@@ -830,10 +280,6 @@ useEffect(() => {
                   </li>
                 ))}
               </ul>
-<<<<<<< HEAD
-              <input type="text" placeholder="Project Title" value={newPortfolio.title} onChange={(e) => setNewPortfolio({ ...newPortfolio, title: e.target.value })} />
-              <input type="text" placeholder="Link (optional)" value={newPortfolio.link} onChange={(e) => setNewPortfolio({ ...newPortfolio, link: e.target.value })} />
-=======
               <input
                 type="text"
                 placeholder="Project Title"
@@ -846,7 +292,6 @@ useEffect(() => {
                 value={newPortfolio.link}
                 onChange={(e) => setNewPortfolio({ ...newPortfolio, link: e.target.value })}
               />
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
               <input type="file" name="portfolioFile" onChange={handleChange} />
               <button type="button" onClick={addPortfolio}>
                 Add Portfolio
@@ -856,17 +301,6 @@ useEffect(() => {
             {/* Contacts */}
             <div className="form-group">
               <label>Phone</label>
-<<<<<<< HEAD
-              <input type="text" name="contacts.phone" value={user.contacts?.phone || ""} onChange={handleChange} />
-              <label>GitHub</label>
-              <input type="text" name="contacts.github" value={user.contacts?.github || ""} onChange={handleChange} />
-              <label>LinkedIn</label>
-              <input type="text" name="contacts.linkedin" value={user.contacts?.linkedin || ""} onChange={handleChange} />
-              <label>Email</label>
-              <input type="email" name="contacts.email" value={user.contacts?.email || ""} onChange={handleChange} />
-            </div>
-
-=======
               <input
                 type="text"
                 name="contacts.phone"
@@ -901,7 +335,6 @@ useEffect(() => {
             </div>
 
 
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
             <div className="form-buttons">
               <button type="submit">Save</button>
               <button type="button" onClick={() => setEditMode(false)}>
@@ -913,52 +346,13 @@ useEffect(() => {
           <>
             <h2>{user.name || "Your Name"}</h2>
             <p>
-<<<<<<< HEAD
-              {user.branch || "Branch"} | {user.college || "College"}
-=======
               {user.branch || "Branch"} | {user.college || "Chitkara Univeristy"}
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
             </p>
             <p className="bio">{user.bio || "Your bio goes here..."}</p>
             <button onClick={() => setEditMode(true)}>Edit Profile</button>
           </>
         )}
       </div>
-<<<<<<< HEAD
-
-      {/* Profile Stats */}
-      <div className="profile-stats">
-        <div className="stat-card">
-          <h3>{user.jobsPosted || 0}</h3>
-          <p>Jobs Posted</p>
-        </div>
-        <div className="stat-card">
-          <h3>{user.jobsAccepted || 0}</h3>
-          <p>Jobs Accepted</p>
-        </div>
-        <div className="stat-card">
-          <h3>₹{user.earnings || 0}</h3>
-          <p>Total Earnings</p>
-        </div>
-        <div className="stat-card">
-          <h3>{typeof user.rating === "number" ? user.rating.toFixed(1) : "—"}⭐</h3>
-
-          <p>Rating</p>
-        </div>
-      </div>
-
-      {/* Avatar Picker */}
-      {editMode && showSelector && (
-        <ProfilePicSelector
-          onSelect={(id) => {
-            setProfilePic(id);
-            setUser({ ...user, profilePic: id });
-            setShowSelector(false);
-          }}
-        />
-      )}
-
-=======
 <div className="profile-stats">
   <div className="stat-card">
     <h3>{user.jobsPosted || 0}</h3>
@@ -1001,14 +395,10 @@ useEffect(() => {
         </ResponsiveContainer>
       </div>
 
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
       {/* Skills */}
       <div className="profile-section">
         <h3>Skills</h3>
         <div className="skills-list">
-<<<<<<< HEAD
-          {user.skills && user.skills.length > 0 ? user.skills.map((skill, idx) => <span key={idx} className="skill-tag">{skill}</span>) : "No skills added yet"}
-=======
           {user.skills && user.skills.length > 0
             ? user.skills.map((skill, idx) => (
               <span key={idx} className="skill-tag">
@@ -1016,7 +406,6 @@ useEffect(() => {
               </span>
             ))
             : "No skills added yet"}
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
         </div>
       </div>
 
@@ -1024,9 +413,6 @@ useEffect(() => {
       <div className="profile-section">
         <h3>Campus Gigs Completed</h3>
         <ul className="task-list">
-<<<<<<< HEAD
-          {user.tasksDone && user.tasksDone.length > 0 ? user.tasksDone.map((task, idx) => <li key={idx}>{task.title} - <b>{task.status}</b></li>) : "No tasks completed yet"}
-=======
           {user.tasksDone && user.tasksDone.length > 0
             ? user.tasksDone.map((task, idx) => (
               <li key={idx}>
@@ -1034,7 +420,6 @@ useEffect(() => {
               </li>
             ))
             : "No tasks completed yet"}
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
         </ul>
       </div>
 
@@ -1042,13 +427,6 @@ useEffect(() => {
       <div className="profile-section">
         <h3>Portfolio</h3>
         <div className="portfolio-grid">
-<<<<<<< HEAD
-          {user.portfolio && user.portfolio.length > 0 ? user.portfolio.map((proj, idx) => (
-            <a key={idx} href={proj.link} target="_blank" rel="noreferrer" className="portfolio-card">
-              <p>{proj.title}</p>
-            </a>
-          )) : "No portfolio added yet"}
-=======
           {user.portfolio && user.portfolio.length > 0
             ? user.portfolio.map((proj, idx) => (
               <a
@@ -1063,24 +441,12 @@ useEffect(() => {
               </a>
             ))
             : "No portfolio added yet"}
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
         </div>
       </div>
 
       {/* Contact */}
       <div className="profile-section contacts">
         <h3>Contact</h3>
-<<<<<<< HEAD
-        <div className="contacts-row">
-          {user.contacts?.phone && <p>{user.contacts.phone}</p>}
-          <div className="contacts-icons">
-            {user.contacts?.github && <a href={user.contacts.github.startsWith("http") ? user.contacts.github : `https://${user.contacts.github}`} target="_blank" rel="noreferrer" title="GitHub"><FaGithub size={24} /></a>}
-            {user.contacts?.linkedin && <a href={user.contacts.linkedin.startsWith("http") ? user.contacts.linkedin : `https://${user.contacts.linkedin}`} target="_blank" rel="noreferrer" title="LinkedIn"><FaLinkedin size={24} /></a>}
-            {user.contacts?.email && <a href={`mailto:${user.contacts.email}`} title="Email"><FaEnvelope size={24} /></a>}
-          </div>
-        </div>
-      </div>
-=======
 
         <div className="contacts-row">
           {user.contacts?.phone && <p>{user.contacts.phone}</p>}
@@ -1126,9 +492,9 @@ useEffect(() => {
       </div>
 
 
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
     </div>
   );
 };
+
 
 export default Profile;

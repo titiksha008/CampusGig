@@ -124,10 +124,7 @@
   font-weight: 500;
   box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
-<<<<<<< HEAD
-=======
   /* color:#000; */
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 }
 
 .skill-tag:hover {
@@ -244,11 +241,8 @@
   background: #f5faf5; /* slightly greenish background */
   border-radius: 12px;
   box-shadow: 0px 3px 12px rgba(0, 0, 0, 0.08);
-<<<<<<< HEAD
-=======
   color:#333;
 
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 }
 
 .profile-edit-form label {
@@ -257,10 +251,7 @@
   margin-bottom: 5px;
   color: #2e7d32; /* dark green label */
   display: block;
-<<<<<<< HEAD
-=======
 
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 }
 
 .profile-edit-form input,
@@ -287,10 +278,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-<<<<<<< HEAD
-=======
   
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 }
 
 .form-buttons {
@@ -346,10 +334,7 @@
   text-align: center;
   box-shadow: 0 4px 15px rgba(0,0,0,0.12);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-<<<<<<< HEAD
-=======
   
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
 }
 
 .stat-card:hover {
@@ -366,9 +351,6 @@
 .stat-card p {
   font-size: 1rem;
   opacity: 0.9;
-<<<<<<< HEAD
-}
-=======
 }
 
 /* avatars */
@@ -471,4 +453,3 @@
     padding: 15px;
   }
 }
->>>>>>> 7b2b40d4c2d61e6fa17862dfd829936ae5af78b6
