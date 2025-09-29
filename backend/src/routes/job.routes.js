@@ -1,5 +1,6 @@
 // routes/job.routes.js
 import express from "express";
+import mongoose from "mongoose"; // ✅ FIX: needed for ObjectId
 import Job from "../models/Job.js";
 import AssignedJob from "../models/AssignedJob.js";
 import User from "../models/User.js";
@@ -61,7 +62,6 @@ router.get("/:id/bids", auth, async (req, res) => {
 /**
  * ------------------- Select a Winning Bid -------------------
  */
-// ------------------- Select a Winning Bid -------------------
 router.put("/:jobId/select/:bidId", auth, async (req, res) => {
   try {
     const job = await Job.findById(req.params.jobId);
@@ -135,12 +135,49 @@ router.post("/", auth, async (req, res) => {
 });
 
 /**
- * ------------------- GET all unaccepted jobs -------------------
+ * ------------------- Pass Job -------------------
+ */
+router.post("/:id/pass", auth, async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const user = await User.findById(req.user._id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.passedJobs = user.passedJobs || [];
+
+    const jobObjectId = new mongoose.Types.ObjectId(jobId);
+
+    if (!user.passedJobs.some((id) => id.equals(jobObjectId))) {
+      user.passedJobs.push(jobObjectId);
+      await user.save();
+    }
+
+    res.json({ message: "Job passed for this user" });
+  } catch (err) {
+    console.error("Error in /pass route:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * ------------------- GET all unaccepted jobs (with filters & excluding passedJobs) -------------------
  */
 router.get("/", auth, async (req, res) => {
   try {
-    const { search, category } = req.query;
-    let filter = { acceptedBy: null };
+    const { search, category, role } = req.query;
+    const user = await User.findById(req.user._id).lean();
+
+    // Ensure passedJobs are ObjectIds
+    const passedJobIds = (user?.passedJobs || []).map(
+      (id) => new mongoose.Types.ObjectId(id)
+    );
+
+    // Base filter: only unaccepted jobs + exclude passed jobs
+    let filter = {
+      acceptedBy: null,
+      _id: { $nin: passedJobIds },
+    };
 
     if (search) {
       filter.$or = [
@@ -149,8 +186,11 @@ router.get("/", auth, async (req, res) => {
       ];
     }
 
+    // Use category or role as filter
     if (category) {
       filter.category = { $regex: category, $options: "i" };
+    } else if (role && role !== "") {
+      filter.category = { $regex: role, $options: "i" };
     }
 
     const jobs = await Job.find(filter).populate("postedBy", "name email");
@@ -236,7 +276,8 @@ router.put("/:id/rate", auth, async (req, res) => {
     if (student) {
       student.ratings = student.ratings || [];
       student.ratings.push(rating);
-      student.rating = student.ratings.reduce((a, b) => a + b, 0) / student.ratings.length;
+      student.rating =
+        student.ratings.reduce((a, b) => a + b, 0) / student.ratings.length;
       await student.save();
     }
 
@@ -274,10 +315,14 @@ router.get("/my", auth, async (req, res) => {
   try {
     const jobs = await Job.find({ postedBy: req.user._id }).lean();
     const jobIds = jobs.map((j) => j._id);
-    const assigned = await AssignedJob.find({ job: { $in: jobIds } }).populate("student", "name email").lean();
+    const assigned = await AssignedJob.find({ job: { $in: jobIds } })
+      .populate("student", "name email")
+      .lean();
 
     const jobsWithStatus = jobs.map((job) => {
-      const assignedEntry = assigned.find((a) => (a.job?._id || a.job).toString() === job._id.toString());
+      const assignedEntry = assigned.find(
+        (a) => (a.job?._id || a.job).toString() === job._id.toString()
+      );
       return {
         ...job,
         status: assignedEntry?.status || "pending",

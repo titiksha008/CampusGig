@@ -1,3 +1,4 @@
+
 // src/pages/JobsList.jsx
 import { useEffect, useState } from "react";
 import api from "../services/api";
@@ -139,12 +140,10 @@ export default function JobsList({ setUser }) {
               <p>
                 <strong>Pay:</strong> ₹{job.price}
               </p>
-              <p>
-                <strong>Deadline:</strong>{" "}
-                {job.deadline
-                  ? new Date(job.deadline).toLocaleDateString()
-                  : "No deadline"}
-              </p>
+            <div className="deadline-badge">
+  {timeLeft(job.deadline)}
+</div>
+
               <p>
                 <strong>Posted by:</strong> {job.postedBy?.name || "Anonymous"}
               </p>

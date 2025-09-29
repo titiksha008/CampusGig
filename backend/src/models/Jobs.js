@@ -1,3 +1,4 @@
+
 //modls/job.js
 
 import mongoose from "mongoose";
@@ -9,7 +10,7 @@ const jobSchema = new mongoose.Schema({
   price: Number,
   deadline: Date,
   postedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  acceptedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null } // ✅ new field
+  acceptedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }, // ✅ new field
 },
   { timestamps: true }
 );

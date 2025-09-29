@@ -1,4 +1,4 @@
-// Navbar.jsx
+
 import { Link, useNavigate } from "react-router-dom";
 import "./AppStyles.css";
 import api from "../services/api";
@@ -10,20 +10,16 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await api.post("/auth/logout"); // only if backend uses cookies
+      await api.post("/auth/logout");
     } catch (err) {
       console.error(err);
     }
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
     setUser(null);
     navigate("/login");
   };
 
-  if (loading) return null;
-
+  if (loading) return null; // wait for auth check
   const loggedIn = !!user;
-  const userId = user?._id || localStorage.getItem("userId"); // ✅ fallback
 
   return (
     <nav className="navbar">
@@ -33,28 +29,31 @@ export default function Navbar() {
 
       <div className="nav-center">
         <Link to="/jobs">Jobs</Link>
-        {loggedIn && <Link to="/post-job">Post Job</Link>}
+        <Link to="/post-job">Post Job</Link>
         {loggedIn && <Link to="/accepted-jobs">Accepted Jobs</Link>}
         {loggedIn && <Link to="/my-jobs">My Jobs</Link>}
-        {loggedIn && userId && (
-          <Link to={`/portfolio/${userId}`} className="nav-link">
-            Portfolio
-          </Link>
-        )}
       </div>
 
       <div className="nav-right">
         {loggedIn && <Link to="/chat">Chat</Link>}
-        {loggedIn && <Link to="/profile" className="nav-link">Profile</Link>}
-        {!loggedIn ? (
+
+        {loggedIn ? (
+          <div className="profile-dropdown">
+            <span className="profile-text">Profile ▾</span>
+            <div className="dropdown-content">
+              <Link to="/profile">View Profile</Link>
+              <Link to={`/portfolio/${user._id}`}>Portfolio</Link>
+
+              <button onClick={handleLogout} className="logout-btn">
+                Logout
+              </button>
+            </div>
+          </div>
+        ) : (
           <>
             <Link to="/login" className="nav-btn">Login</Link>
             <Link to="/signup" className="nav-btn signup-btn">Signup</Link>
           </>
-        ) : (
-          <button className="nav-btn signup-btn" onClick={handleLogout}>
-            Logout
-          </button>
         )}
       </div>
     </nav>
