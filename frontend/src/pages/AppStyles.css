@@ -968,3 +968,392 @@ AppStyles.css
   background-color: #f3f4f6;
   color: #7c3aed;
 }
+/* AppStyles.cs
+mai ye update krde */
+/* Form wrapper */
+.post-job-container {
+  max-width: 480px;
+  margin: 60px auto;
+  padding: 35px 30px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Title */
+.post-job-container h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+/* Inputs & textarea */
+.post-job-container input,
+.post-job-container textarea {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+  background: #f9fafb;
+  color: #374151;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.post-job-container input:focus,
+.post-job-container textarea:focus {
+  border-color: #a855f7;
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.3);
+  background: #fff;
+  outline: none;
+}
+
+.post-job-container textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Skills section */
+.skills-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 15px;
+}
+
+.skills-input {
+  flex: 1;
+  min-width: 0; /* allows flex shrink */
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.skills-add-btn {
+  padding: 10px 14px;
+  border: 1px solid #111827;
+  background: #fff;
+  color: #111827;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skills-add-btn:hover {
+  background: #111827;
+  color: #fff;
+}
+
+.skill-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f3f4f6;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111827;
+}
+
+.skill-trash {
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 12px;
+  transition: color 0.2s;
+}
+
+.skill-trash:hover {
+  color: #ef4444;
+}
+
+/* Submit button */
+.post-job-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(90deg, #a855f7, #ec4899);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.post-job-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+ye AppStyles.css mai end mai add krna
+
+
+/* Container for sort dropdown */
+.sort-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+/* Label for sorting */
+.sort-container label {
+  font-weight: bold;
+  color: #333;
+}
+
+/* Select dropdown styling */
+.sort-select {
+  padding: 6px 10px;
+  color: black;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+
+
+
+/* Container */
+.jobs-list-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Search and Filter */
+.jobs-list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.nav-search {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.nav-filter {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+/* Sort Dropdown */
+.sort-container {
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-select {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+/* Headings */
+h2 {
+  margin: 2rem 0 1rem;
+  color: #222;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+/* Job List */
+.jobs-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+/* Job Card Wrapper (li) */
+.jobs-list li {
+  display: block;
+}
+
+/* Job Card */
+.job-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.job-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Job Card Content */
+.job-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  color: #222;
+}
+
+.job-card p {
+  margin: 0.3rem 0;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.job-card .job-meta {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* No jobs message */
+.jobs-list p {
+  font-style: italic;
+  color: #999;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .jobs-list-filters {
+    flex-direction: column;
+  }
+  
+  .sort-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
+.post-job-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.post-job-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  color: #222;
+}
+
+.post-job-form input,
+.post-job-form textarea {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.post-job-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Skills section */
+.skills-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.skill-tag {
+  display: flex;
+  align-items: center;
+  background-color: #e0f0ff;
+  color: #0077cc;
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.skill-trash {
+  margin-left: 0.3rem;
+  cursor: pointer;
+  color: #cc0000;
+}
+
+.skills-input {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.skills-add-btn {
+  background-color: #0077cc;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.7rem;
+  margin-left: 0.3rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skills-add-btn:hover {
+  background-color: #005fa3;
+}
+
+/* Submit button */
+.post-job-btn {
+  width: 100%;
+  padding: 0.7rem;
+  background-color: #0077cc;
+  color: white;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.post-job-btn:hover {
+  background-color: #005fa3;
+}
+.recommendations-dropdown div:hover {
+  background-color: #f5f5f5;
+}
