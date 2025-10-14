@@ -132,13 +132,12 @@
 //   });
 //   res.status(200).json({ message: "Logged out successfully" });
 // };
-
-// controllers/auth.controller.js
+// auth.controller.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import Job from "../models/Job.js";
 import AssignedJob from "../models/AssignedJob.js";
+import Job from "../models/Jobs.js";
 
 // Generate JWT and set cookie
 const generateToken = (res, userId) => {
