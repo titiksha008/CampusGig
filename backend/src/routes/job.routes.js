@@ -241,10 +241,17 @@ router.get("/accepted", auth, async (req, res) => {
   try {
     const acceptedJobs = await AssignedJob.find({
       student: req.user._id,
-      status: { $in: ["accepted", "completed", "rated"] }
+      status: { $in: ["accepted", "completed", "rated"] },
     })
-      .populate({ path: "job", populate: { path: "postedBy", select: "name email" } })
-      .populate("student", "name email")
+      .populate({
+        path: "job",
+        populate: {
+          path: "postedBy",
+          model: "User",
+          select: "name email _id",
+        },
+      })
+      .populate("student", "name email _id")
       .sort({ assignedAt: -1 });
 
     res.json(acceptedJobs);
@@ -252,6 +259,7 @@ router.get("/accepted", auth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // ------------------- Get Jobs Posted by Current User -------------------
 router.get("/my", auth, async (req, res) => {
