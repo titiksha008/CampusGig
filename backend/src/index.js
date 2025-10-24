@@ -1,3 +1,5 @@
+//2.index.js
+// index.js
 import "dotenv/config";
 import { connectDB } from "./config/db.js";
 import app from "./app.js";
@@ -8,7 +10,7 @@ import Chat from "./models/Chat.js";
 
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB
+// Connect DB
 await connectDB();
 
 // Create HTTP server
@@ -59,7 +61,13 @@ io.on("connection", (socket) => {
         });
       }
 
-      chat.messages.push({ senderId: senderObjId, text, jobId: jobObjId });
+      chat.messages.push({
+        senderId: senderObjId,
+        text: msgData.text || "",
+        file: msgData.file || "",
+        fileType: msgData.fileType || "",
+        jobId: jobObjId,
+      });
       await chat.save();
 
       const roomId = [posterId, acceptedUserId, jobId].sort().join("-");
@@ -71,12 +79,41 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Mark messages as seen
+  socket.on("messageSeen", async ({ posterId, acceptedUserId, jobId, viewerId }) => {
+    try {
+      const posterObjId = new mongoose.Types.ObjectId(posterId);
+      const acceptedObjId = new mongoose.Types.ObjectId(acceptedUserId);
+
+      const chat = await Chat.findOne({
+        $or: [
+          { posterId: posterObjId, acceptedUserId: acceptedObjId },
+          { posterId: acceptedObjId, acceptedUserId: posterObjId },
+        ],
+      });
+
+      if (!chat) return;
+
+      // Update all messages from the other user to seen
+      chat.messages.forEach((msg) => {
+        if (msg.senderId.toString() !== viewerId) {
+          msg.seen = true;
+        }
+      });
+
+      await chat.save();
+
+      const roomId = [posterId, acceptedUserId, jobId].sort().join("-");
+      io.to(roomId).emit("messageSeenUpdate", chat.messages);
+    } catch (err) {
+      console.error("Socket messageSeen error:", err);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
   });
 });
 
 // Start server
-server.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
-);
+server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

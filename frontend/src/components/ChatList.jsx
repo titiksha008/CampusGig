@@ -1,3 +1,5 @@
+//4.ChatList.jsx
+
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -14,8 +16,9 @@ export default function ChatList() {
   const fetchChats = async () => {
     if (!user?._id) return;
     try {
-      const res = await api.get(`/chat/user/${user._id}`);
-      const validChats = res.data.filter(
+     const res = await api.get(`/chat/user/${user._id}`);
+const validChats = res.data.filter(
+
         (chat) =>
           chat &&
           chat.posterId?.name &&
@@ -38,8 +41,13 @@ export default function ChatList() {
     socketRef.current = io("http://localhost:5000");
 
     // Listen for new messages
-    socketRef.current.on("newMessage", () => {
-      fetchChats(); // refresh chat list when a new message arrives
+    socketRef.current.on("newMessage", (msg) => {
+      fetchChats();
+    });
+
+    // Listen for seen updates
+    socketRef.current.on("messageSeenUpdate", () => {
+      fetchChats();
     });
 
     return () => {
@@ -47,7 +55,7 @@ export default function ChatList() {
     };
   }, [user?._id]);
 
-  const handleChatClick = (chat) => {
+  const handleChatClick = async (chat) => {
     if (!chat?.posterId?._id || !chat?.acceptedUserId?._id) return;
 
     const otherUser =
@@ -71,13 +79,41 @@ export default function ChatList() {
 
     if (!latestChat || !latestChat.messages?.length) return;
 
-    const latestJobId = latestChat.messages[latestChat.messages.length - 1]?.jobId;
+    const latestJobId =
+      latestChat.messages[latestChat.messages.length - 1]?.jobId;
     if (!latestJobId) return;
 
-    navigate(
-      `/chat/${latestChat.posterId._id}/${latestJobId}/${latestChat.acceptedUserId._id}`,
-      { state: { posterName: otherUser.name || "Unknown User" } }
-    );
+    // --- Mark messages as seen ---
+    try {
+      await api.post("/chat/mark-seen", {
+        posterId: latestChat.posterId._id,
+        acceptedUserId: latestChat.acceptedUserId._id,
+        jobId: latestJobId,
+        viewerId: user._id,
+      });
+
+      // Notify other clients via Socket.IO
+      const roomId = [
+        latestChat.posterId._id,
+        latestChat.acceptedUserId._id,
+        latestJobId,
+      ]
+        .sort()
+        .join("-");
+      socketRef.current.emit("messageSeen", {
+        posterId: latestChat.posterId._id,
+        acceptedUserId: latestChat.acceptedUserId._id,
+        jobId: latestJobId,
+        viewerId: user._id,
+      });
+    } catch (err) {
+      console.error("Error marking messages as seen:", err);
+    }
+navigate(
+  `/chat/${latestChat.posterId._id}/${latestJobId}/${latestChat.acceptedUserId._id}`,
+  { state: { posterName: otherUser?.name || "Unknown User" } }
+);
+
   };
 
   return (
@@ -96,6 +132,14 @@ export default function ChatList() {
 
           if (!otherUser) return null;
 
+          // --- Check for unseen message ---
+          const latestMsg =
+            chat.messages[chat.messages.length - 1] || null;
+          const hasUnseen =
+            latestMsg &&
+            latestMsg.senderId !== user._id &&
+            !latestMsg.seen;
+
           return (
             <div
               key={chat._id || Math.random()}
@@ -103,6 +147,7 @@ export default function ChatList() {
               onClick={() => handleChatClick(chat)}
             >
               <strong>{otherUser?.name || "Unknown User"}</strong>
+              {hasUnseen && <span style={{ color: "red", marginLeft: "8px" }}>• New Message</span>}
             </div>
           );
         })

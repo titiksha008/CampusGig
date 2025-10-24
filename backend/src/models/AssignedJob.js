@@ -39,6 +39,11 @@ const AssignedJobSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  bidAmount: {
+  type: Number,
+  required: true
+},
+
 });
 
 const AssignedJob = mongoose.model("AssignedJob", AssignedJobSchema);

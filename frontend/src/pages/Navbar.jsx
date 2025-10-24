@@ -1,8 +1,8 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import "./AppStyles.css";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { FaComments } from "react-icons/fa";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -24,7 +24,9 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="nav-left">
-        <Link to="/" className="logo">CampusGig</Link>
+        <Link to="/" className="logo">
+          CampusGig
+        </Link>
       </div>
 
       <div className="nav-center">
@@ -32,10 +34,15 @@ export default function Navbar() {
         <Link to="/post-job">Post Job</Link>
         {loggedIn && <Link to="/accepted-jobs">Accepted Jobs</Link>}
         {loggedIn && <Link to="/my-jobs">My Jobs</Link>}
+        {/* Removed My Bids from center */}
       </div>
 
       <div className="nav-right">
-        {loggedIn && <Link to="/chat">Chat</Link>}
+        {loggedIn && (
+          <Link to="/chat" className="chat-icon-link" title="Chat">
+            <FaComments size={30} />
+          </Link>
+        )}
 
         {loggedIn ? (
           <div className="profile-dropdown">
@@ -43,7 +50,7 @@ export default function Navbar() {
             <div className="dropdown-content">
               <Link to="/profile">View Profile</Link>
               <Link to={`/portfolio/${user._id}`}>Portfolio</Link>
-
+              <Link to="/mybids">My Bids / Earnings</Link> {/* 🆕 Moved here */}
               <button onClick={handleLogout} className="logout-btn">
                 Logout
               </button>
@@ -51,8 +58,12 @@ export default function Navbar() {
           </div>
         ) : (
           <>
-            <Link to="/login" className="nav-btn">Login</Link>
-            <Link to="/signup" className="nav-btn signup-btn">Signup</Link>
+            <Link to="/login" className="nav-btn">
+              Login
+            </Link>
+            <Link to="/signup" className="nav-btn signup-btn">
+              Signup
+            </Link>
           </>
         )}
       </div>
