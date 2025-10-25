@@ -286,26 +286,69 @@ router.get("/my", auth, async (req, res) => {
     res.status(500).json({ message: "Error fetching jobs" });
   }
 });
-
+// ✅ Add this near the bottom of jobs.routes.js
 router.get("/me", auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).lean();
+    const userId = req.user._id;
 
-    const acceptedJobsCount = await AssignedJob.countDocuments({
-      student: req.user._id,
-      status: { $in: ["accepted", "completed", "rated"] }
+    // Count jobs posted by the user
+    const jobsPostedCount = await Job.countDocuments({ postedBy: userId });
+
+    // Fetch all assigned jobs for the user
+    const assignedJobs = await AssignedJob.find({
+      student: userId,
+      status: { $in: ["accepted", "completed", "rated"] },
+    })
+      .populate("job", "pay title")
+      .lean();
+
+    // Use a Set to count UNIQUE jobs
+    const uniqueJobIds = new Set();
+    let jobsCompleted = 0;
+    let totalEarnings = 0;
+    let ratings = [];
+
+    assignedJobs.forEach(j => {
+      const jobId = j.job?._id?.toString();
+      if (!jobId) return; // skip invalid jobs
+
+      if (!uniqueJobIds.has(jobId)) {
+        uniqueJobIds.add(jobId);
+      }
+
+      if (["completed", "rated"].includes(j.status)) {
+        jobsCompleted++;
+        const amt = typeof j.bidAmount === "string" ? parseInt(j.bidAmount.replace(/[^\d]/g, ""), 10) || 0 : j.bidAmount || 0;
+        totalEarnings += amt;
+        if (typeof j.rating === "number") ratings.push(j.rating);
+      }
     });
+
+    const jobsAccepted = uniqueJobIds.size;
+
+    const averageRating = ratings.length > 0
+      ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+      : 0.0;
+
+    const user = await User.findById(userId).select("-password").lean();
 
     res.json({
       user: {
         ...user,
-        jobsAccepted: acceptedJobsCount
+        jobsPosted: jobsPostedCount,
+        jobsAccepted,
+        jobsCompleted,
+        totalEarnings,
+        rating: averageRating,
       }
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch user job data" });
   }
 });
+
+
 
 // ------------------- Pass Job -------------------
 router.post("/:id/pass", auth, async (req, res) => {
