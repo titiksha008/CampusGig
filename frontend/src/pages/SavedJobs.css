@@ -1,0 +1,33 @@
+/* frontend/src/pages/SavedJobs.css */
+
+.saved-jobs-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+}
+
+.saved-jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.saved-job-card {
+  border: 1px solid #ddd;
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.save-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
+}
+
+.save-btn.saved {
+  color: #f5b301;
+}

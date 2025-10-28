@@ -34,7 +34,7 @@ export default function Navbar() {
         <Link to="/post-job">Post Job</Link>
         {loggedIn && <Link to="/accepted-jobs">Accepted Jobs</Link>}
         {loggedIn && <Link to="/my-jobs">My Jobs</Link>}
-        {/* Removed My Bids from center */}
+        {loggedIn && <Link to="/saved-jobs">⭐ Saved Jobs</Link>} {/* 🆕 Added */}
       </div>
 
       <div className="nav-right">
@@ -50,7 +50,7 @@ export default function Navbar() {
             <div className="dropdown-content">
               <Link to="/profile">View Profile</Link>
               <Link to={`/portfolio/${user._id}`}>Portfolio</Link>
-              <Link to="/mybids">My Bids / Earnings</Link> {/* 🆕 Moved here */}
+              <Link to="/mybids">My Bids / Earnings</Link>
               <button onClick={handleLogout} className="logout-btn">
                 Logout
               </button>

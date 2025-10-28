@@ -26,31 +26,39 @@ const Profile = () => {
       .catch((err) => console.error("Error fetching portfolio:", err));
   }, [user]);
 
-  // ✅ FIXED: Removed nested useEffect — this is now a standalone effect
-useEffect(() => {
-  const fetchProfile = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/jobs/me", {
-        withCredentials: true,
-      });
-      setUser(res.data.user);
-      setProfilePic(res.data.user.profilePic || null);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load profile data");
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchProfile();
-}, []);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/jobs/me", {
+          withCredentials: true,
+        });
+        setUser(res.data.user);
+        setProfilePic(res.data.user.profilePic || null);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load profile data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
+  const badges = [];
+  if (user?.jobsPosted >= 5) badges.push("🏅 Job Poster");
+  if (user?.jobsAccepted >= 5) badges.push("🎯 Job Acceptor");
+  if (user?.jobsCompleted >= 5) badges.push("✅ Job Completer");
+  if ((user?.rating || 0) >= 4.5) badges.push("🌟 Top Rated");
+  if ((user?.tasksDone?.filter(t => t.status === "Completed").length || 0) >= 5)
+    badges.push("💪 Campus Hero");
 
   const pieData = [
     { name: "Jobs Posted", value: user?.jobsPosted || 0 },
     { name: "Jobs Accepted", value: user?.jobsAccepted || 0 },
+    { name: "Jobs Completed", value: user?.jobsCompleted || 0 },
   ];
-  const COLORS = ["#0088FE", "#00C49F"];
+
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28"];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -111,7 +119,6 @@ useEffect(() => {
 
   return (
     <div className="profile-container">
-      {/* Sidebar */}
       <div className="profile-sidebar">
         <div className="profile-box">
           <div className="profile-pic-wrapper">
@@ -137,7 +144,6 @@ useEffect(() => {
           </button>
         </div>
 
-        {/* Stats Cards */}
         <div className="stats-card">
           <h3>{user.jobsPosted || 0}</h3>
           <p>Jobs Posted</p>
@@ -146,173 +152,180 @@ useEffect(() => {
           <h3>{user.jobsAccepted || 0}</h3>
           <p>Jobs Accepted</p>
         </div>
-     <div className="stats-card">
-  <h3>₹{user.totalEarnings || 0}</h3>
-  <p>Total Earnings</p>
-</div>
-
-<div className="stats-card">
-  <h3>{user.rating ? `${user.rating}⭐` : "—⭐"}</h3>
-  <p>Rating</p>
-</div>
-
+        <div className="stats-card">
+          <h3>{user.jobsCompleted || 0}</h3>
+          <p>Jobs Completed</p>
+        </div>
+        <div className="stats-card">
+          <h3>₹{user.totalEarnings || 0}</h3>
+          <p>Total Earnings</p>
+        </div>
+        <div className="stats-card">
+          <h3>{user.rating ? `${user.rating}⭐` : "—⭐"}</h3>
+          <p>Rating</p>
+        </div>
+        <div className="badges-container">
+          <h4>Badges</h4>
+          <div className="badges-list">
+            {badges.length > 0 ? (
+              badges.map((b, idx) => (
+                <span key={idx} className="badge">
+                  {b}
+                </span>
+              ))
+            ) : (
+              <p>No badges yet</p>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Main Content */}
       <div className="profile-main">
-        {editMode && (
-          <div className="avatar-selector-main">
-            {Object.keys(avatarsMap).map((id) => (
-              <div
-                key={id}
-                className={`avatar-item ${profilePic === id ? "selected" : ""}`}
-                onClick={() => setProfilePic(id)}
-              >
-                <Lottie animationData={avatarsMap[id]} loop style={{ height: 70 }} />
-              </div>
-            ))}
+        {editMode ? (
+          <>
+            <div className="avatar-selector-main">
+              {Object.keys(avatarsMap).map((id) => (
+                <div
+                  key={id}
+                  className={`avatar-item ${profilePic === id ? "selected" : ""}`}
+                  onClick={() => setProfilePic(id)}
+                >
+                  <Lottie animationData={avatarsMap[id]} loop style={{ height: 70 }} />
+                </div>
+              ))}
+            </div>
 
-            {editMode ? (
-              <form
-                className="profile-edit-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  saveProfile();
-                }}
-              >
-                {showSelector && (
-                  <ProfilePicSelector
-                    onSelect={(id) => {
-                      setProfilePic(id);
-                      setUser({ ...user, profilePic: id });
-                      setShowSelector(false);
-                    }}
-                  />
-                )}
+            <form
+              className="profile-edit-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveProfile();
+              }}
+            >
+              {showSelector && (
+                <ProfilePicSelector
+                  onSelect={(id) => {
+                    setProfilePic(id);
+                    setUser({ ...user, profilePic: id });
+                    setShowSelector(false);
+                  }}
+                />
+              )}
 
-                {/* Basic Info */}
-                {["name", "branch", "college", "bio"].map((field) => (
-                  <div className="form-group" key={field}>
-                    <label>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
-                    {field === "bio" ? (
-                      <textarea
-                        name={field}
-                        value={user[field] || ""}
-                        onChange={handleChange}
-                        placeholder={`Enter your ${field}`}
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        name={field}
-                        value={user[field] || ""}
-                        onChange={handleChange}
-                        placeholder={`Enter your ${field}`}
-                      />
-                    )}
-                  </div>
-                ))}
-
-                {/* Skills */}
-                <div className="form-group">
-                  <label>Skills</label>
-                  <div className="skills-edit">
-                    {(user.skills || []).map((s, idx) => (
-                      <span key={idx} className="skill-tag">
-                        {s} <FaTrash onClick={() => removeSkill(idx)} />
-                      </span>
-                    ))}
+              {["name", "branch", "college", "bio"].map((field) => (
+                <div className="form-group" key={field}>
+                  <label>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
+                  {field === "bio" ? (
+                    <textarea
+                      name={field}
+                      value={user[field] || ""}
+                      onChange={handleChange}
+                      placeholder={`Enter your ${field}`}
+                    />
+                  ) : (
                     <input
                       type="text"
-                      value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      placeholder="Add a skill"
-                    />
-                    <button type="button" onClick={addSkill}>
-                      <FaPlus />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Tasks */}
-                <div className="form-group">
-                  <label>Campus Gigs</label>
-                  <ul>
-                    {(user.tasksDone || []).map((t, idx) => (
-                      <li key={idx}>
-                        {t.title} - {t.status} <FaTrash onClick={() => removeTask(idx)} />
-                      </li>
-                    ))}
-                  </ul>
-                  <input
-                    type="text"
-                    placeholder="Title"
-                    value={newTask.title}
-                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Status"
-                    value={newTask.status}
-                    onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
-                  />
-                  <button type="button" onClick={addTask}>
-                    Add Task
-                  </button>
-                </div>
-
-                {/* Portfolio */}
-                <div className="profile-section">
-                  <h3>Portfolio</h3>
-                  <p style={{ marginBottom: "1rem", color: "#555", fontSize: "0.8rem" }}>
-                    To add a new portfolio, please navigate to the Portfolio Page.
-                  </p>
-                  <div className="portfolio-grid">
-                    {portfolioProjects.length > 0 ? (
-                      portfolioProjects.map((proj, idx) => (
-                        <a
-                          key={idx}
-                          href={proj.link || `http://localhost:5000${proj.fileUrl}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="portfolio-card"
-                        >
-                          <p>{proj.title}</p>
-                        </a>
-                      ))
-                    ) : (
-                      <p>No portfolio added yet.</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Contacts */}
-                {["phone", "github", "linkedin", "email"].map((field) => (
-                  <div className="form-group" key={field}>
-                    <label>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
-                    <input
-                      type={field === "email" ? "email" : "text"}
-                      name={`contacts.${field}`}
-                      value={user.contacts?.[field] || ""}
+                      name={field}
+                      value={user[field] || ""}
                       onChange={handleChange}
+                      placeholder={`Enter your ${field}`}
                     />
-                  </div>
-                ))}
+                  )}
+                </div>
+              ))}
 
-                <div className="form-buttons">
-                  <button type="submit">Save</button>
-                  <button type="button" onClick={() => setEditMode(false)}>
-                    Cancel
+              <div className="form-group">
+                <label>Skills</label>
+                <div className="skills-edit">
+                  {(user.skills || []).map((s, idx) => (
+                    <span key={idx} className="skill-tag">
+                      {s} <FaTrash onClick={() => removeSkill(idx)} />
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    placeholder="Add a skill"
+                  />
+                  <button type="button" onClick={addSkill}>
+                    <FaPlus />
                   </button>
                 </div>
-              </form>
-            ) : null}
-          </div>
-        )}
+              </div>
 
-        {!editMode && (
+              <div className="form-group">
+                <label>Campus Gigs</label>
+                <ul>
+                  {(user.tasksDone || []).map((t, idx) => (
+                    <li key={idx}>
+                      {t.title} - {t.status} <FaTrash onClick={() => removeTask(idx)} />
+                    </li>
+                  ))}
+                </ul>
+                <input
+                  type="text"
+                  placeholder="Title"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Status"
+                  value={newTask.status}
+                  onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
+                />
+                <button type="button" onClick={addTask}>
+                  Add Task
+                </button>
+              </div>
+
+              <div className="profile-section">
+                <h3>Portfolio</h3>
+                <p style={{ marginBottom: "1rem", color: "#555", fontSize: "0.8rem" }}>
+                  To add a new portfolio, please navigate to the Portfolio Page.
+                </p>
+                <div className="portfolio-grid">
+                  {portfolioProjects.length > 0 ? (
+                    portfolioProjects.map((proj, idx) => (
+                      <a
+                        key={idx}
+                        href={proj.link || `http://localhost:5000${proj.fileUrl}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="portfolio-card"
+                      >
+                        <p>{proj.title}</p>
+                      </a>
+                    ))
+                  ) : (
+                    <p>No portfolio added yet.</p>
+                  )}
+                </div>
+              </div>
+
+              {["phone", "github", "linkedin", "email"].map((field) => (
+                <div className="form-group" key={field}>
+                  <label>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
+                  <input
+                    type={field === "email" ? "email" : "text"}
+                    name={`contacts.${field}`}
+                    value={user.contacts?.[field] || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+              ))}
+
+              <div className="form-buttons">
+                <button type="submit">Save</button>
+                <button type="button" onClick={() => setEditMode(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </>
+        ) : (
           <>
-            {/* Pie Chart */}
             <div className="profile-section">
               <h3>Profile Insights</h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -335,7 +348,6 @@ useEffect(() => {
               </ResponsiveContainer>
             </div>
 
-            {/* Skills */}
             <div className="profile-section">
               <h3>Skills</h3>
               <div className="skills-list">
@@ -349,7 +361,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Tasks */}
             <div className="profile-section">
               <h3>Campus Gigs Completed</h3>
               <ul className="task-list">
@@ -363,7 +374,6 @@ useEffect(() => {
               </ul>
             </div>
 
-            {/* Portfolio */}
             <div className="profile-section">
               <h3>Portfolio</h3>
               <div className="portfolio-grid">
@@ -385,7 +395,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Contacts */}
             <div className="profile-section contacts">
               <h3>Contact</h3>
               <div className="contacts-row">
