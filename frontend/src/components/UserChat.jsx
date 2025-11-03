@@ -68,7 +68,7 @@ export default function UserChat({ currentUserId: propCurrentUserId }) {
     setNewMsg(e.target.value);
   };
 
-  // Send message
+    // Send message
   const handleSend = () => {
     if (!newMsg.trim()) return;
 
@@ -84,8 +84,7 @@ export default function UserChat({ currentUserId: propCurrentUserId }) {
     // Emit to server
     socketRef.current.emit("sendMessage", msgData);
 
-    // Update local state immediately
-    setMessages((prev) => [...prev, { ...msgData, _id: Date.now() }]); // temp ID
+    // Clear input (the actual message will come through socket)
     setNewMsg("");
   };
 

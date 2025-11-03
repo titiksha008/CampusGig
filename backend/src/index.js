@@ -6,6 +6,7 @@ import http from "http";
 import { Server } from "socket.io";
 import mongoose from "mongoose";
 import Chat from "./models/Chat.js";
+import { notifyChatMessage } from "./utils/notification.js"; // { changed code }
 
 const PORT = process.env.PORT || 5000;
 
@@ -67,6 +68,17 @@ io.on("connection", (socket) => {
       const newMsg = chat.messages[chat.messages.length - 1];
 
       io.to(roomId).emit("newMessage", newMsg);
+      // Notify all other participants by email (non-blocking)
+      try {
+        const participantIds = [posterId, acceptedUserId].filter(Boolean).map(String);
+        const recipients = participantIds.filter(id => id !== String(senderId));
+        // fire notifications concurrently
+        for (const rid of recipients) {
+          notifyChatMessage({ senderId, recipientId: rid, jobId, text }).catch(console.error);
+        }
+      } catch (notifyErr) {
+        console.error("Email notifyChatMessage failed:", notifyErr);
+      }
     } catch (err) {
       console.error("Socket sendMessage error:", err);
     }
