@@ -17,6 +17,8 @@ import JobBids from "./pages/JobBids";
 import Portfolio from "./pages/Portfolio.jsx";
 import MyBids from "./pages/MyBids.jsx";
 import SavedJobs from "./pages/SavedJobs.jsx"; // 🆕 Added
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function App() {
   return (
@@ -52,8 +54,10 @@ export default function App() {
 
         {/* Chat widget appears on all screens */}
         <ChatWidget />
-      </BrowserRouter>
+           </BrowserRouter>
+      <ToastContainer position="bottom-right" autoClose={3000} />
     </AuthProvider>
+
   );
 }
 

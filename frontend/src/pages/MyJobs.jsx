@@ -6,7 +6,7 @@ import Navbar from "./Navbar";
 import { useAuth } from "../context/AuthContext";
 import { FaStar } from "react-icons/fa";
 import "./AppStyles.css";
-import RatingComponent from "../Components/RatingComponent"; // adjust path if needed
+import RatingComponent from "../components/RatingComponent"; // adjust path if needed
 
 const MyJobs = ({ onProfileUpdate }) => {
   const { user, loading } = useAuth();
@@ -51,7 +51,7 @@ const MyJobs = ({ onProfileUpdate }) => {
       alert("Failed to submit rating. Please try again.");
     }
   };
-
+  
   if (loading || jobsLoading)
     return <p className="text-center mt-6">Loading your jobs...</p>;
 
@@ -172,6 +172,7 @@ const MyJobs = ({ onProfileUpdate }) => {
                   </div>
                 )}
               </li>
+
             ))}
           </ul>
         )}
