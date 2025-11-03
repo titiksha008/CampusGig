@@ -1,0 +1,621 @@
+//routes/jobs.routes.js
+import express from "express";
+import Job from "../models/Jobs.js";
+import AssignedJob from "../models/AssignedJob.js";
+import { auth } from "../middleware/auth.middleware.js";
+import User from "../models/User.js";
+import Bid from "../models/Bid.js";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import Razorpay from "razorpay";
+
+
+const router = express.Router();
+
+// Razorpay client (uses your .env)
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+// rupees → paise (handles "₹4,900")
+const toPaise = (amt) => {
+  let r = Number(amt);
+  if (Number.isNaN(r)) r = parseInt(String(amt).replace(/[^\d]/g, ""), 10) || 0;
+  return Math.round(r * 100);
+};
+/**
+ * ------------------- Place a Bid -------------------
+ */
+router.post("/:id/bid", auth, async (req, res) => {
+  try {
+    const { bidAmount } = req.body;
+    if (!bidAmount) return res.status(400).json({ message: "Bid amount required" });
+
+    // Ensure max 5 bids per job
+    const bidCount = await Bid.countDocuments({ job: req.params.id });
+    if (bidCount >= 5) {
+      return res.status(400).json({ message: "Maximum bids reached for this job" });
+    }
+
+    const bid = await Bid.create({
+      job: req.params.id,
+      student: req.user._id,
+      bidAmount,
+    });
+
+    res.status(201).json({ message: "Bid placed successfully", bid });
+  } catch (err) {
+    console.error("Error placing bid:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * ------------------- Get all bids for a job (poster only) -------------------
+ */
+router.get("/:id/bids", auth, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    if (String(job.postedBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const bids = await Bid.find({ job: req.params.id })
+      .populate("student", "name email rating")
+      .sort({ bidAmount: 1 });
+
+    res.json(bids);
+  } catch (err) {
+    console.error("Error fetching bids:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// ------------------- Select a Winning Bid -------------------
+// router.put("/:jobId/select/:bidId", auth, async (req, res) => {
+//   try {
+//     const job = await Job.findById(req.params.jobId);
+//     if (!job) return res.status(404).json({ message: "Job not found" });
+
+//     if (String(job.postedBy) !== String(req.user._id)) {
+//       return res.status(403).json({ message: "Not authorized" });
+//     }
+
+//     const bid = await Bid.findById(req.params.bidId).populate("student");
+//     if (!bid) return res.status(404).json({ message: "Bid not found" });
+
+//     // ✅ Mark this bid as accepted
+//     bid.status = "accepted";
+//     await bid.save();
+
+//     // ✅ Mark others as rejected
+//     await Bid.updateMany(
+//       { job: req.params.jobId, _id: { $ne: req.params.bidId } },
+//       { $set: { status: "rejected" } }
+//     );
+
+//     // ✅ Update the job to mark it accepted
+//     job.acceptedBy = bid.student._id;
+//     await job.save();
+
+//     // ✅ Create an AssignedJob
+// const assignedJob = await AssignedJob.create({
+//   job: job._id,
+//   student: bid.student._id,
+//   jobTitle: job.title,
+//   studentName: bid.student.name,
+//   studentEmail: bid.student.email,
+//   bidAmount: bid.bidAmount, // ✅ Add this line
+//   status: "accepted",
+// });
+
+
+
+//     res.json({ message: "Bid selected and job assigned", assignedJob });
+//   } catch (err) {
+//     console.error("Error selecting bid:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+router.put("/:jobId/select/:bidId", auth, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    // Only poster can pay
+    if (String(job.postedBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const bid = await Bid.findById(req.params.bidId).populate("student");
+    if (!bid) return res.status(404).json({ message: "Bid not found" });
+
+    // 🔁 If we already have a pending order (not captured), reuse it
+    if (job.payment?.orderId && job.payment?.status === "PENDING" && !job.payment?.captured) {
+      return res.json({
+        message: "Payment pending. Reusing existing order.",
+        payment: {
+          keyId: process.env.RAZORPAY_KEY_ID,
+          orderId: job.payment.orderId,
+          amount: job.payment.heldAmount,
+          currency: "INR",
+          jobId: job._id,
+        },
+      });
+    }
+
+    // Accept this bid; reject others (idempotent)
+    if (bid.status !== "accepted") {
+      bid.status = "accepted";
+      await bid.save();
+      await Bid.updateMany(
+        { job: req.params.jobId, _id: { $ne: req.params.bidId } },
+        { $set: { status: "rejected" } }
+      );
+    }
+
+    // Update job state
+    job.acceptedBy = bid.student._id;
+    job.status = "ACCEPTED";
+    job.acceptedAt = new Date();
+
+    // Amounts
+    const amountPaise = toPaise(bid.bidAmount);
+    if (amountPaise < 100) return res.status(400).json({ message: "Invalid amount for order" });
+
+    const platformFee = Math.round(amountPaise * 0.10);
+    const workerPayout = amountPaise - platformFee;
+
+    // build a short, unique receipt (<= 40 chars)
+const short = (v) => String(v).replace(/[^a-zA-Z0-9]/g, "").slice(-8);
+const receipt = `j${short(job._id)}-b${short(bid._id)}-${Date.now().toString().slice(-6)}`;
+
+console.log("[RZP] creating order with key:", process.env.RAZORPAY_KEY_ID);
+console.log("[RZP] amount (paise):", amountPaise);
+console.log("[RZP] receipt:", receipt);
+    // Create new order
+    const order = await razorpay.orders.create({
+  amount: amountPaise,
+  currency: "INR",
+  receipt,  // ✅ short receipt
+  notes: { jobId: String(job._id), bidId: String(bid._id) }, // keep full IDs here
+  partial_payment: false,
+});
+console.log("[RZP] order created:", order.id, "amount:", order.amount);
+    // Persist payment info
+    job.payment = {
+      orderId: order.id,
+      heldAmount: amountPaise,
+      platformFee,
+      workerPayout,
+      status: "PENDING",
+      captured: false,
+    };
+    await job.save();
+
+    // Ensure AssignedJob exists
+    await AssignedJob.findOneAndUpdate(
+      { job: job._id, student: bid.student._id },
+      {
+        job: job._id,
+        student: bid.student._id,
+        jobTitle: job.title,
+        studentName: bid.student.name,
+        studentEmail: bid.student.email,
+        bidAmount: bid.bidAmount,
+        status: "accepted",
+      },
+      { upsert: true, new: true }
+    );
+
+    return res.json({
+  message: "Bid selected. Payment required from poster.",
+  payment: {
+    keyId: process.env.RAZORPAY_KEY_ID,
+    orderId: order.id,
+    amount: amountPaise,
+    currency: "INR",
+    jobId: job._id,
+  },
+});
+  } catch (err) {
+    console.error("Select & pay error:", err?.error || err);
+    return res
+      .status(500)
+      .json({ message: err?.error?.description || err?.message || "Server error" });
+  }
+});
+
+
+// ------------------- Create a Job -------------------
+router.post("/", auth, async (req, res) => {
+  try {
+    const job = new Job({
+      ...req.body,
+      postedBy: req.user._id
+    });
+    await job.save();
+
+    // Increment user's jobsPosted
+    await User.findByIdAndUpdate(req.user._id, { $inc: { jobsPosted: 1 } });
+
+    res.status(201).json(job);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+// ------------------- GET all jobs (unaccepted, optional search/filter) -------------------
+router.get("/", auth, async (req, res) => {
+  try {
+    const { search, role } = req.query;
+    const user = await User.findById(req.user._id).lean();
+
+    // Make sure passedJobs are ObjectIds
+    const passedJobIds = (user?.passedJobs || []).map(
+      id => new mongoose.Types.ObjectId(id)
+    );
+
+    // Base filter: only unaccepted jobs + exclude passed + exclude own jobs
+    let filter = {
+      acceptedBy: null,
+      _id: { $nin: passedJobIds },
+      postedBy: { $ne: req.user._id }   // 🚫 exclude jobs posted by current user
+    };
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    if (role && role !== "") {
+      filter.category = { $regex: role, $options: "i" };
+    }
+
+    const jobs = await Job.find(filter).populate("postedBy", "name email");
+    res.json(jobs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Poster/Admin: mark job COMPLETED and record payout reference (manual for now)
+router.post("/:jobId/complete-payment", auth, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    const isPoster = String(job.postedBy) === String(req.user._id);
+    if (!isPoster && !req.user.isAdmin) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    if (!job.payment?.captured) {
+      return res.status(400).json({ message: "Payment not captured yet" });
+    }
+
+    job.status = "COMPLETED";
+    job.completedAt = new Date();
+
+    const { payoutRef } = req.body; // e.g., bank UTR or RazorpayX payout id
+    job.payment.payoutId = payoutRef || `MANUAL_${Date.now()}`;
+
+    await job.save();
+    return res.json({ message: "Job completed & payout recorded", job });
+  } catch (err) {
+    console.error("complete-payment error:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+
+// ------------------- Accept Job -------------------
+router.put("/:id/accept", auth, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+    if (job.acceptedBy) return res.status(400).json({ message: "Job already accepted" });
+
+    job.acceptedBy = req.user._id;
+    await job.save();
+
+    const assigned = await AssignedJob.create({
+      job: job._id,
+      student: req.user._id,
+      jobTitle: job.title,
+      studentName: req.user.name,
+      studentEmail: req.user.email,
+      status: "accepted",
+      rating: null,
+      review: null
+    });
+
+    await User.findByIdAndUpdate(req.user._id, { $inc: { jobsAccepted: 1 } });
+
+    res.json({ message: "Job accepted", job, assigned });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ------------------- Mark Job Completed -------------------
+router.put("/:id/complete", auth, async (req, res) => {
+  try {
+    const assignedJob = await AssignedJob.findById(req.params.id);
+    if (!assignedJob) return res.status(404).json({ message: "Assigned job not found" });
+    if (assignedJob.status !== "accepted")
+      return res.status(400).json({ message: "Only accepted jobs can be completed" });
+
+    assignedJob.status = "completed";
+    await assignedJob.save();
+
+    res.json({ message: "Job marked as completed", assignedJob });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ------------------- Rate Completed Job -------------------
+router.post("/:id/rate", auth, async (req, res) => {
+  try {
+    const { rating, review } = req.body;
+
+    const assignedJob = await AssignedJob.findById(req.params.id);
+    if (!assignedJob) return res.status(404).json({ message: "Job not found" });
+    if (assignedJob.status !== "completed")
+      return res.status(400).json({ message: "Job not completed yet" });
+
+    assignedJob.rating = rating;
+    assignedJob.review = review;
+    assignedJob.status = "rated";
+    await assignedJob.save();
+
+    const user = await User.findById(assignedJob.student);
+    if (user) {
+      user.ratings = user.ratings || [];
+      user.ratings.push(rating);
+      user.rating = user.ratings.reduce((a, b) => a + b, 0) / user.ratings.length;
+      await user.save();
+    }
+
+    res.json({ message: "Rating submitted", assignedJob });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ------------------- Get Accepted Jobs for Current User -------------------
+router.get("/accepted", auth, async (req, res) => {
+  try {
+    const acceptedJobs = await AssignedJob.find({
+      student: req.user._id,
+      status: { $in: ["accepted", "completed", "rated"] },
+    })
+      .populate({
+        path: "job",
+        populate: {
+          path: "postedBy",
+          model: "User",
+          select: "name email _id",
+        },
+      })
+      .populate("student", "name email _id")
+      .sort({ assignedAt: -1 });
+
+    res.json(acceptedJobs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// ------------------- Get Jobs Posted by Current User -------------------
+router.get("/my", auth, async (req, res) => {
+  try {
+    const jobs = await Job.find({ postedBy: req.user._id }).populate("acceptedBy", "name email").lean();
+
+    const jobIds = jobs.map(j => j._id);
+    const assigned = await AssignedJob.find({ job: { $in: jobIds } }).populate("student", "name email").lean();
+
+    const jobsWithStatus = jobs.map(job => {
+      const assignedEntry = assigned.find(a => (a.job?._id || a.job).toString() === job._id.toString());
+      return {
+        ...job,
+        status: assignedEntry?.status || "pending",
+        acceptedBy: assignedEntry ? assignedEntry.student : null,
+        assignedJobId: assignedEntry?._id,
+        rating: assignedEntry?.rating || null,
+        review: assignedEntry?.review || null
+      };
+    });
+
+    res.json(jobsWithStatus);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching jobs" });
+  }
+});
+// ✅ Add this near the bottom of jobs.routes.js
+router.get("/me", auth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Count jobs posted by the user
+    const jobsPostedCount = await Job.countDocuments({ postedBy: userId });
+
+    // Fetch all assigned jobs for the user
+    const assignedJobs = await AssignedJob.find({
+      student: userId,
+      status: { $in: ["accepted", "completed", "rated"] },
+    })
+      .populate("job", "pay title")
+      .lean();
+
+    // Use a Set to count UNIQUE jobs
+    const uniqueJobIds = new Set();
+    let jobsCompleted = 0;
+    let totalEarnings = 0;
+    let ratings = [];
+
+    assignedJobs.forEach(j => {
+      const jobId = j.job?._id?.toString();
+      if (!jobId) return; // skip invalid jobs
+
+      if (!uniqueJobIds.has(jobId)) {
+        uniqueJobIds.add(jobId);
+      }
+
+      if (["completed", "rated"].includes(j.status)) {
+        jobsCompleted++;
+        const amt = typeof j.bidAmount === "string" ? parseInt(j.bidAmount.replace(/[^\d]/g, ""), 10) || 0 : j.bidAmount || 0;
+        totalEarnings += amt;
+        if (typeof j.rating === "number") ratings.push(j.rating);
+      }
+    });
+
+    const jobsAccepted = uniqueJobIds.size;
+
+    const averageRating = ratings.length > 0
+      ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+      : 0.0;
+
+    const user = await User.findById(userId).select("-password").lean();
+
+    res.json({
+      user: {
+        ...user,
+        jobsPosted: jobsPostedCount,
+        jobsAccepted,
+        jobsCompleted,
+        totalEarnings,
+        rating: averageRating,
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch user job data" });
+  }
+});
+
+
+
+// ------------------- Pass Job -------------------
+router.post("/:id/pass", auth, async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const user = await User.findById(req.user._id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    console.log("Before:", user.passedJobs);
+
+    user.passedJobs = user.passedJobs || [];
+
+    const jobObjectId = new mongoose.Types.ObjectId(jobId);
+
+    if (!user.passedJobs.some(id => id.equals(jobObjectId))) {
+      user.passedJobs.push(jobObjectId);
+      await user.save();
+      console.log("After:", user.passedJobs);
+    } else {
+      console.log("Job already in passedJobs");
+    }
+
+    res.json({ message: "Job passed for this user" });
+  } catch (err) {
+    console.error("Error in /pass route:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// ------------------- Get all bids placed by current user -------------------
+// router.get("/my-bids", auth, async (req, res) => {
+//   try {
+//     // Fetch all bids by this user
+//     const bids = await Bid.find({ student: req.user._id })
+//       .populate({
+//         path: "job",
+//         select: "title budget postedBy",
+//         populate: { path: "postedBy", select: "name email" }
+//       })
+//       .sort({ createdAt: -1 });
+
+//     // Calculate total earnings from completed/rated jobs
+//     const completedJobs = await AssignedJob.find({
+//       student: req.user._id,
+//       status: { $in: ["completed", "rated"] }
+//     });
+
+//     const totalEarnings = completedJobs.reduce(
+//       (sum, job) => sum + (job.bidAmount || 0),
+//       0
+//     );
+
+//     res.json({ bids, totalEarnings });
+//   } catch (err) {
+//     console.error("Error fetching my bids:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+router.get("/my-bids", auth, async (req, res) => {
+  try {
+    // Fetch all bids placed by this user
+    const bids = await Bid.find({ student: req.user._id })
+      .populate({
+        path: "job",
+        select: "title budget postedBy",
+        populate: { path: "postedBy", select: "name email" }
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // ✅ Fetch all assigned jobs that belong to this user
+    const assignedJobs = await AssignedJob.find({
+      student: req.user._id,
+      status: { $in: ["accepted", "completed", "rated"] }
+    }).lean();
+
+    // ✅ Create a set of job IDs that were assigned
+    const assignedJobIds = new Set(assignedJobs.map(a => a.job.toString()));
+
+    // ✅ Calculate total earnings from all assigned jobs
+    const totalEarnings = assignedJobs.reduce(
+      (sum, job) => sum + (job.bidAmount || 0),
+      0
+    );
+
+    // ✅ Attach assigned job info to bids (for frontend display)
+    const bidsWithAssignedJob = bids.map(bid => ({
+      ...bid,
+      assignedJob: assignedJobs.find(a => a.job.toString() === bid.job._id.toString()) || null
+    }));
+
+    res.json({
+      bids: bidsWithAssignedJob,
+      totalEarnings
+    });
+  } catch (err) {
+    console.error("Error fetching my bids:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET one job by id (includes payment/status)
+router.get("/:id", auth, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id)
+      .populate("postedBy", "name email")
+      .lean();
+    if (!job) return res.status(404).json({ message: "Job not found" });
+    return res.json(job);
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+});
+
+
+export default router;
