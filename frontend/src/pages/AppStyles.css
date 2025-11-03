@@ -1393,70 +1393,103 @@ textarea {
   background: linear-gradient(135deg, #6a1bb0, #883ad4);
   transform: scale(1.02);
 }
-/* Rating Section Styling */
-.rating-section {
-  margin-top: 50px;
-  padding: 30px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+
+
+/* ====================== RATING FEATURE STYLING ====================== */
+
+.rating-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 18px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
-.rating-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #6a0dad;
-  margin-bottom: 20px;
+.rating-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
-.stars {
+.rating-header {
+  font-size: 17px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 10px;
   display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
+  align-items: center;
+  gap: 6px;
 }
 
-.star {
+/* Stars Row */
+.stars-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  justify-content: flex-start;
+}
+
+.star-icon {
   cursor: pointer;
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.star:hover {
-  transform: scale(1.2);
+.star-icon:hover {
+  transform: scale(1.15);
+  color: #facc15 !important; /* golden hover */
 }
 
-.rating-comment {
+/* Textarea for review */
+.rating-textarea {
   width: 100%;
-  min-height: 100px;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  font-size: 1rem;
-  resize: none;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  min-height: 80px;
+  resize: vertical;
   outline: none;
-  transition: border-color 0.3s ease;
+  background: #fff;
+  color: #374151;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
 }
 
-.rating-comment:focus {
-  border-color: #6a0dad;
+.rating-textarea:focus {
+  border-color: #a855f7;
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.3);
 }
 
-.rating-submit-btn {
-  margin-top: 20px;
-  background: linear-gradient(135deg, #7a00ff, #b966ff);
-  color: white;
+/* Submit button */
+.rating-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px 0;
+  background: linear-gradient(90deg, #a855f7, #ec4899);
   border: none;
-  padding: 12px 24px;
-  font-size: 1rem;
-  border-radius: 25px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
-.rating-submit-btn:hover {
-  background: linear-gradient(135deg, #9b33ff, #d699ff);
-  transform: scale(1.05);
+.rating-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* Small responsive tweaks */
+@media (max-width: 480px) {
+  .rating-card {
+    padding: 14px;
+  }
+  .stars-wrapper {
+    gap: 6px;
+  }
+  .star-icon {
+    size: 24px;
+  }
 }

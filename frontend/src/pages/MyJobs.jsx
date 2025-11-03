@@ -5,23 +5,24 @@ import api from "../services/api";
 import Navbar from "./Navbar";
 import { useAuth } from "../context/AuthContext";
 import { FaStar } from "react-icons/fa";
+import { toast } from "react-toastify"; // ✅ Correct import for react-toastify
 import "./AppStyles.css";
-import RatingComponent from "../components/RatingComponent"; // adjust path if needed
 
 const MyJobs = ({ onProfileUpdate }) => {
   const { user, loading } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
-  const [ratingData, setRatingData] = useState({}); // track stars and comment for each job
+  const [ratingData, setRatingData] = useState({});
   const navigate = useNavigate();
 
-  // Fetch jobs
+  // Fetch jobs posted by user
   const fetchJobs = async () => {
     try {
       const res = await api.get("/jobs/my");
       setJobs(res.data);
     } catch (err) {
       console.error("Error fetching my jobs:", err);
+      toast.error("Failed to load your jobs.");
     } finally {
       setJobsLoading(false);
     }
@@ -32,26 +33,35 @@ const MyJobs = ({ onProfileUpdate }) => {
     fetchJobs();
   }, [user]);
 
-  // Handle Rating Submit
+  // Handle rating submission
   const handleRatingSubmit = async (assignedJobId) => {
     const { stars, comment } = ratingData[assignedJobId] || {};
     if (!stars || stars < 1) {
-      alert("Please select a star rating before submitting!");
+      toast.warn("Please select a star rating before submitting!");
       return;
     }
 
     try {
-      await api.post(`/jobs/${assignedJobId}/rate`, { rating: stars, review: comment });
-      alert("Thank you for your feedback!");
-      fetchJobs();
+      await api.post(`/jobs/${assignedJobId}/rate`, {
+        rating: stars,
+        review: comment,
+      });
+
+      toast.success("Thank you for your feedback!");
+      fetchJobs(); // refresh jobs after rating
       if (onProfileUpdate) onProfileUpdate();
-      setRatingData((prev) => ({ ...prev, [assignedJobId]: { stars: 0, comment: "" } }));
+
+      // reset rating form for this job
+      setRatingData((prev) => ({
+        ...prev,
+        [assignedJobId]: { stars: 0, comment: "" },
+      }));
     } catch (err) {
       console.error("Error submitting rating:", err);
-      alert("Failed to submit rating. Please try again.");
+      toast.error("Failed to submit rating. Please try again.");
     }
   };
-  
+
   if (loading || jobsLoading)
     return <p className="text-center mt-6">Loading your jobs...</p>;
 
@@ -60,6 +70,7 @@ const MyJobs = ({ onProfileUpdate }) => {
       <Navbar />
       <div className="my-jobs-container">
         <h2>My Posted Jobs</h2>
+
         {jobs.length === 0 ? (
           <p>You haven’t posted any jobs yet.</p>
         ) : (
@@ -93,16 +104,21 @@ const MyJobs = ({ onProfileUpdate }) => {
                 <div style={{ marginTop: "10px" }}>
                   <button
                     className="btn-accept"
-                    onClick={() => navigate(`/jobs/${job._id}/bids`)}
+                    onClick={() => {
+                      navigate(`/jobs/${job._id}/bids`);
+                      toast.info("Opening bids...");
+                    }}
                   >
                     View Bids
                   </button>
                 </div>
 
-                {/* Professional Rating Section */}
+                {/* Rating Section (for completed jobs) */}
                 {job.acceptedBy && job.status === "completed" && (
                   <div className="rating-card">
-                    <h4 className="rating-header">⭐ Rate Completed Work</h4>
+                    <h4 className="rating-header">Rate Completed Work</h4>
+
+                    {/* Star Rating */}
                     <div className="stars-wrapper">
                       {[...Array(5)].map((_, i) => {
                         const ratingValue = i + 1;
@@ -112,15 +128,17 @@ const MyJobs = ({ onProfileUpdate }) => {
                             className="star-icon"
                             size={28}
                             color={
-                              ratingValue <= (ratingData[job.assignedJobId]?.hover || ratingData[job.assignedJobId]?.stars)
+                              ratingValue <=
+                              (ratingData[job._id]?.hover ||
+                                ratingData[job._id]?.stars)
                                 ? "#facc15"
                                 : "#e5e7eb"
                             }
                             onClick={() =>
                               setRatingData((prev) => ({
                                 ...prev,
-                                [job.assignedJobId]: {
-                                  ...prev[job.assignedJobId],
+                                [job._id]: {
+                                  ...prev[job._id],
                                   stars: ratingValue,
                                 },
                               }))
@@ -128,8 +146,8 @@ const MyJobs = ({ onProfileUpdate }) => {
                             onMouseEnter={() =>
                               setRatingData((prev) => ({
                                 ...prev,
-                                [job.assignedJobId]: {
-                                  ...prev[job.assignedJobId],
+                                [job._id]: {
+                                  ...prev[job._id],
                                   hover: ratingValue,
                                 },
                               }))
@@ -137,8 +155,8 @@ const MyJobs = ({ onProfileUpdate }) => {
                             onMouseLeave={() =>
                               setRatingData((prev) => ({
                                 ...prev,
-                                [job.assignedJobId]: {
-                                  ...prev[job.assignedJobId],
+                                [job._id]: {
+                                  ...prev[job._id],
                                   hover: null,
                                 },
                               }))
@@ -148,31 +166,32 @@ const MyJobs = ({ onProfileUpdate }) => {
                       })}
                     </div>
 
+                    {/* Review Textbox */}
                     <textarea
                       className="rating-textarea"
                       placeholder="Write a short review..."
-                      value={ratingData[job.assignedJobId]?.comment || ""}
+                      value={ratingData[job._id]?.comment || ""}
                       onChange={(e) =>
                         setRatingData((prev) => ({
                           ...prev,
-                          [job.assignedJobId]: {
-                            ...prev[job.assignedJobId],
+                          [job._id]: {
+                            ...prev[job._id],
                             comment: e.target.value,
                           },
                         }))
                       }
                     />
 
+                    {/* Submit Button */}
                     <button
                       className="rating-btn"
-                      onClick={() => handleRatingSubmit(job.assignedJobId)}
+                      onClick={() => handleRatingSubmit(job._id)}
                     >
                       Submit Rating
                     </button>
                   </div>
                 )}
               </li>
-
             ))}
           </ul>
         )}

@@ -51,6 +51,30 @@ router.post("/:id/bid", auth, async (req, res) => {
   }
 });
 
+
+router.get("/activities/me", auth, async (req, res) => {
+  try {
+    // 1️⃣ Find jobs created by the logged-in user
+    const myJobs = await Job.find({ createdBy: req.user._id }).select("_id");
+
+    // 2️⃣ Find activities related to those jobs
+    const activities = await Activity.find({
+      $or: [
+        { user: req.user._id },       // actions you did
+        { job: { $in: myJobs } },     // actions on your jobs
+      ],
+    })
+      .populate("user", "name")
+      .populate("job", "title")
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.json(activities);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /**
  * ------------------- Get all bids for a job (poster only) -------------------
  */

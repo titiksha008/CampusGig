@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "./AppStyles.css";
 import { useAuth } from "../context/AuthContext";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function AcceptedJobs() {
   const [jobs, setJobs] = useState([]);
@@ -15,17 +16,20 @@ export default function AcceptedJobs() {
   // Refresh every minute to update deadlines
   useEffect(() => {
     const interval = setInterval(() => {
-      setTick(prev => prev + 1);
+      setTick((prev) => prev + 1);
     }, 60000);
     return () => clearInterval(interval);
   }, []);
 
   const openChat = (posterId, jobId, acceptedUserId, posterName) => {
     if (!acceptedUserId) {
-      alert("Cannot open chat: Accepted user not found");
+      toast.error("Cannot open chat: Accepted user not found");
       return;
     }
-    navigate(`/chat/${posterId}/${jobId}/${acceptedUserId}`, { state: { posterName } });
+    toast("Opening chat...", { icon: "💬" });
+    navigate(`/chat/${posterId}/${jobId}/${acceptedUserId}`, {
+      state: { posterName },
+    });
   };
 
   const fetchAcceptedJobs = async () => {
@@ -34,6 +38,7 @@ export default function AcceptedJobs() {
       setJobs(res.data);
     } catch (err) {
       console.error("Error fetching accepted jobs:", err.response?.data || err.message);
+      toast.error("Failed to load accepted jobs.");
     } finally {
       setLoading(false);
     }
@@ -42,6 +47,7 @@ export default function AcceptedJobs() {
   const markCompleted = async (id) => {
     try {
       await api.put(`/jobs/${id}/complete`);
+      toast.success("Job marked as completed!");
       fetchAcceptedJobs();
 
       // Refresh user stats
@@ -49,12 +55,14 @@ export default function AcceptedJobs() {
       setUser(res.data.user);
     } catch (err) {
       console.error("Error marking job completed:", err.response?.data || err.message);
+      toast.error("Failed to mark job as completed.");
     }
   };
 
   const acceptJob = async (id) => {
     try {
       await api.put(`/jobs/${id}/accept`);
+      toast.success("Job accepted successfully!");
       fetchAcceptedJobs();
 
       // Update user stats immediately
@@ -62,6 +70,7 @@ export default function AcceptedJobs() {
       setUser(res.data.user);
     } catch (err) {
       console.error("Error accepting job:", err.response?.data || err.message);
+      toast.error("Failed to accept the job.");
     }
   };
 
@@ -91,11 +100,12 @@ export default function AcceptedJobs() {
 
   if (loading) return <p>Loading your accepted jobs...</p>;
 
-  const acceptedJobs = jobs.filter(j => j.status === "accepted");
-  const completedJobs = jobs.filter(j => j.status === "completed");
+  const acceptedJobs = jobs.filter((j) => j.status === "accepted");
+  const completedJobs = jobs.filter((j) => j.status === "completed");
 
   return (
     <div className="jobs-list">
+      <Toaster position="top-right" />
       <h2>My Accepted Jobs</h2>
       {acceptedJobs.length === 0 ? (
         <p>You haven’t accepted any jobs yet.</p>
@@ -120,14 +130,14 @@ export default function AcceptedJobs() {
                 </p>
 
                 <div className="job-buttons">
-                  {/* Portfolio Button */}
                   <button
                     className="btn-portfolio"
                     onClick={() => {
                       if (!postedBy._id) {
-                        alert("Poster profile not found");
+                        toast.error("Poster profile not found");
                         return;
                       }
+                      toast("Opening portfolio...", { icon: "🧾" });
                       navigate(`/portfolio/${postedBy._id}`);
                     }}
                   >
@@ -181,14 +191,14 @@ export default function AcceptedJobs() {
                 </p>
 
                 <div className="job-buttons">
-                  {/* Portfolio Button */}
                   <button
                     className="btn-portfolio"
                     onClick={() => {
                       if (!postedBy._id) {
-                        alert("Poster profile not found");
+                        toast.error("Poster profile not found");
                         return;
                       }
+                      toast("Opening portfolio...", { icon: "🧾" });
                       navigate(`/portfolio/${postedBy._id}`);
                     }}
                   >
