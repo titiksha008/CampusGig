@@ -1,37 +1,10 @@
-// import nodemailer from 'nodemailer';
-// import 'dotenv/config';
-
-// const transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     auth: {
-//         user: process.env.EMAIL_USER,
-//         pass: process.env.EMAIL_PASS
-//     }
-// });
-
-// // changed: accept both text and html. call as sendEmail(to, subject, text, html)
-// export async function sendEmail(to, subject, text, html) {
-//     try {
-//         const info = await transporter.sendMail({
-//             from: `"CampusGig" <${process.env.EMAIL_USER}>`,
-//             to,
-//             subject,
-//             text,
-//             html
-//         });
-//         console.log("✅ Email sent:", info.messageId);
-//     } catch (err) {
-//         console.error("❌ Email Error:", err);
-//     }
-// }
-
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
 
-// Create transporter with retry mechanism
 let transporter = null;
 let isVerified = false;
 
+// Create transporter with retry mechanism
 function createTransporter() {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         throw new Error('EMAIL_USER and EMAIL_PASS must be set in .env file');
@@ -43,11 +16,11 @@ function createTransporter() {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
         },
-        pool: true, // Use pooled connections
-        maxConnections: 5, // Limit concurrent connections
-        maxMessages: 100, // Limit messages per connection
-        rateDelta: 1000, // Minimum time between messages
-        rateLimit: 5 // Maximum messages per rateDelta
+        pool: true,
+        maxConnections: 5,
+        maxMessages: 100,
+        rateDelta: 1000,
+        rateLimit: 5
     });
 }
 
@@ -57,13 +30,13 @@ async function initializeTransporter() {
         if (!transporter) {
             transporter = createTransporter();
         }
-        
+
         if (!isVerified) {
             await transporter.verify();
             isVerified = true;
             console.log('✅ Email transporter verified and ready');
         }
-        
+
         return true;
     } catch (err) {
         console.error('❌ Email transporter error:', err.message);
@@ -78,38 +51,80 @@ initializeTransporter().catch(err => {
     console.error('Initial email setup failed:', err.message);
 });
 
-export async function sendEmail(to, subject, text, html) {
+// ===============================
+//  ✨ PROFESSIONAL HTML TEMPLATE
+// ===============================
+function generateEmailTemplate({ title, message, buttonText, buttonUrl }) {
+    return `
+    <div style="font-family: 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; padding: 40px;">
+        <table align="center" width="100%" style="max-width: 600px; background: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <tr>
+                <td style="text-align: center; padding: 30px 20px;">
+                    <img src="https://i.ibb.co/sbCTs2r/campusgig-logo.png" alt="CampusGig Logo" style="width: 80px; height: auto; margin-bottom: 15px;" />
+                    <h2 style="color: #111827; font-size: 24px; margin: 10px 0;">${title}</h2>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 0 40px 30px; color: #374151; font-size: 16px; line-height: 1.6;">
+                    ${message}
+                    ${
+                        buttonText && buttonUrl
+                            ? `
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${buttonUrl}" 
+                            style="display: inline-block; padding: 12px 28px; 
+                                   background-color: #2563eb; color: #ffffff; 
+                                   text-decoration: none; border-radius: 8px; 
+                                   font-weight: 600; letter-spacing: 0.3px;">
+                            ${buttonText}
+                        </a>
+                    </div>` : ''
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td style="background-color: #f3f4f6; text-align: center; padding: 15px 10px; border-top: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
+                    <p style="font-size: 13px; color: #6b7280; margin: 0;">
+                        &copy; ${new Date().getFullYear()} CampusGig. All rights reserved.<br>
+                        <a href="https://campusgig.example.com" style="color: #2563eb; text-decoration: none;">Visit our website</a>
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </div>`;
+}
+
+// =====================================
+//  ✉️ UNIVERSAL EMAIL SENDER FUNCTION
+// =====================================
+export async function sendEmail(to, subject, text, options = {}) {
     try {
-        // Ensure transporter is ready
         await initializeTransporter();
-        
+
         if (!to || !subject) {
             throw new Error('Email recipient and subject are required');
         }
+
+        const html = generateEmailTemplate(options);
 
         console.log(`📧 Sending email to ${to}`);
         const info = await transporter.sendMail({
             from: `"CampusGig" <${process.env.EMAIL_USER}>`,
             to,
             subject,
-            text,
+            text: text || options.message?.replace(/<[^>]*>?/gm, ''), // fallback plain text
             html,
             headers: {
-                'X-Priority': '1', // High priority
+                'X-Priority': '1',
                 'X-MSMail-Priority': 'High',
                 'Importance': 'high'
             }
         });
-        
-        if (info && info.messageId) {
-            console.log('✅ Email sent:', info.messageId);
-            return info;
-        } else {
-            throw new Error('No messageId returned');
-        }
+
+        console.log('✅ Email sent:', info.messageId);
+        return info;
     } catch (err) {
         console.error('❌ Email send failed:', err.message);
-        // Attempt to re-initialize transporter on failure
         isVerified = false;
         throw err;
     }

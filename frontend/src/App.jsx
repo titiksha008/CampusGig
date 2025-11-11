@@ -19,6 +19,7 @@ import MyJobs from "./pages/MyJobs.jsx";
 import JobBids from "./pages/JobBids.jsx";
 import Portfolio from "./pages/Portfolio.jsx";
 import MyBids from "./pages/MyBids.jsx";
+import SavedJobs from "./pages/SavedJobs.jsx";
 import ActivityTimelinePage from "./components/Timeline/ActivityTimelinePage.jsx";
 
 // Components
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/post-job" element={<PostJob />} />
             <Route path="/my-jobs" element={<MyJobs />} />
             <Route path="/mybids" element={<MyBids />} />
+            <Route path="/saved-jobs" element={<SavedJobs />} />
             <Route path="/jobs/:jobId/bids" element={<JobBids />} />
             <Route path="/accepted-jobs" element={<AcceptedJobsDashboard />} />
 

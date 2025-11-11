@@ -5,6 +5,7 @@ import AssignedJob from "../models/AssignedJob.js";
 import { auth } from "../middleware/auth.middleware.js";
 import User from "../models/User.js";
 import Bid from "../models/Bid.js";
+import Activity from "../models/Activity.js"; 
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import {
@@ -36,6 +37,7 @@ router.post("/:id/bid", auth, async (req, res) => {
       student: req.user._id,
       bidAmount,
     });
+    
         try {
       const notifBid = { userId: bid.student, message: req.body.message || "" };
       const notifJob = { posterId: job.postedBy, title: job.title, _id: job._id };
@@ -61,7 +63,7 @@ router.get("/activities/me", auth, async (req, res) => {
     const activities = await Activity.find({
       $or: [
         { user: req.user._id },       // actions you did
-        { job: { $in: myJobs } },     // actions on your jobs
+         { job: { $in: myJobs.map(j => j._id) } },    // actions on your jobs
       ],
     })
       .populate("user", "name")
@@ -162,7 +164,12 @@ router.post("/", auth, async (req, res) => {
 
     // Increment user's jobsPosted
     await User.findByIdAndUpdate(req.user._id, { $inc: { jobsPosted: 1 } });
-
+   await Activity.create({
+      user: req.user._id,
+      job: job._id,
+    jobName: job.title || job.name || "Untitled Job",
+      action: "posted",
+    });
     // Notify poster about new job (non-blocking)
     try {
       const notifJob = { posterId: job.postedBy, title: job.title, _id: job._id };
@@ -235,7 +242,12 @@ router.put("/:id/accept", auth, async (req, res) => {
     });
 
     await User.findByIdAndUpdate(req.user._id, { $inc: { jobsAccepted: 1 } });
-
+   await Activity.create({
+      user: req.user._id,
+      job: job._id,
+    jobName: job.title || "Untitled Job",
+      action: "accepted",
+    });
     res.json({ message: "Job accepted", job, assigned });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -262,7 +274,12 @@ router.put("/:id/complete", auth, async (req, res) => {
       console.log('❌ Invalid job status:', assignedJob.status);
       return res.status(400).json({ message: "Only accepted jobs can be marked as completed" });
     }
-
+ await Activity.create({
+      user: req.user._id,
+      job: job._id,
+      jobName: job.title,
+      action: "completed",
+    });
     // ✅ Fetch related Job and Student data in parallel
     const [job, student] = await Promise.all([
       Job.findById(assignedJob.job).select('title postedBy'),
@@ -521,7 +538,7 @@ router.post("/:id/pass", auth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
+// ------------------- Get all bids placed by current user -------------------
 router.get("/my-bids", auth, async (req, res) => {
   try {
     // Fetch all bids placed by this user
@@ -564,7 +581,135 @@ router.get("/my-bids", auth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+/**
+ * ------------------- Get Job by ID -------------------
+ */
+router.get("/:id", auth, async (req, res) => {
+  try {
+    const jobId = req.params.id;
 
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid Job ID" });
+    }
+
+    const job = await Job.findById(jobId)
+      .populate("postedBy", "name email")
+      .populate("acceptedBy", "name email");
+
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    res.json(job);
+  } catch (err) {
+    console.error("Error fetching job by ID:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * ------------------- Place a Bid -------------------
+ */
+router.post("/:id/bid", auth, async (req, res) => {
+  try {
+    const { bidAmount } = req.body;
+    if (!bidAmount) return res.status(400).json({ message: "Bid amount required" });
+
+    const bidCount = await Bid.countDocuments({ job: req.params.id });
+    if (bidCount >= 5) {
+      return res.status(400).json({ message: "Maximum bids reached for this job" });
+    }
+
+    const bid = await Bid.create({
+      job: req.params.id,
+      student: req.user._id,
+      bidAmount,
+    });
+
+    try {
+      const notifBid = { userId: bid.student, message: req.body.message || "" };
+      const job = await Job.findById(req.params.id);
+      const notifJob = { posterId: job.postedBy, title: job.title, _id: job._id };
+      notifyNewBid(notifBid, notifJob).catch(console.error);
+    } catch (notifyErr) {
+      console.error("notifyNewBid error:", notifyErr);
+    }
+
+    res.status(201).json({ message: "Bid placed successfully", bid });
+  } catch (err) {
+    console.error("Error placing bid:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * ------------------- Get all bids for a job (poster only) -------------------
+ */
+router.get("/:id/bids", auth, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    if (String(job.postedBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const bids = await Bid.find({ job: req.params.id })
+      .populate("student", "name email rating")
+      .sort({ bidAmount: 1 });
+
+    res.json(bids);
+  } catch (err) {
+    console.error("Error fetching bids:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ------------------- Select a Winning Bid -------------------
+router.put("/:jobId/select/:bidId", auth, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    if (String(job.postedBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const bid = await Bid.findById(req.params.bidId).populate("student");
+    if (!bid) return res.status(404).json({ message: "Bid not found" });
+
+    bid.status = "accepted";
+    await bid.save();
+
+    await Bid.updateMany(
+      { job: req.params.jobId, _id: { $ne: req.params.bidId } },
+      { $set: { status: "rejected" } }
+    );
+
+    job.acceptedBy = bid.student._id;
+    await job.save();
+
+    const assignedJob = await AssignedJob.create({
+      job: job._id,
+      student: bid.student._id,
+      jobTitle: job.title,
+      studentName: bid.student.name,
+      studentEmail: bid.student.email,
+      bidAmount: bid.bidAmount,
+      status: "accepted",
+    });
+
+    try {
+      const notifJob = { posterId: job.postedBy, title: job.title, _id: job._id };
+      notifyJobAccepted(notifJob, bid.student._id).catch(console.error);
+    } catch (notifyErr) {
+      console.error("notifyJobAccepted error:", notifyErr);
+    }
+
+    res.json({ message: "Bid selected and job assigned", assignedJob });
+  } catch (err) {
+    console.error("Error selecting bid:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 export default router;

@@ -62,6 +62,18 @@ const MyJobs = ({ onProfileUpdate }) => {
     }
   };
 
+  // -------------------- Accept Bid --------------------
+  const handleAcceptBid = async (jobId, bidId) => {
+    try {
+      const res = await api.put(`/jobs/${jobId}/select/${bidId}`);
+      toast.success(res.data.message || "Bid accepted successfully!");
+      fetchJobs(); // refresh jobs after accepting bid
+    } catch (err) {
+      console.error("Error accepting bid:", err);
+      toast.error(err.response?.data?.message || "Failed to accept bid.");
+    }
+  };
+
   if (loading || jobsLoading)
     return <p className="text-center mt-6">Loading your jobs...</p>;
 
