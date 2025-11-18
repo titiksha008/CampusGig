@@ -2,24 +2,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Profile.css";
-import {
-  FaGithub,
-  FaLinkedin,
-  FaEnvelope,
-  FaEdit,
-  FaPlus,
-  FaTrash,
-} from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaEnvelope, FaEdit, FaPlus, FaTrash } from "react-icons/fa";
 import Lottie from "lottie-react";
 import ProfilePicSelector, { avatarsMap } from "../components/ProfilePicSelector";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import ActivityCalendar from "react-activity-calendar";
 import Timeline from "../components/Timeline/Timeline";
 import api from "../services/api";
@@ -71,9 +57,7 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const data = Array.isArray(res.data)
-          ? res.data
-          : res.data.activities || [];
+        const data = Array.isArray(res.data) ? res.data : res.data.activities || [];
 
         const formatted = data.map((a) => ({
           ...a,
@@ -96,13 +80,11 @@ const Profile = () => {
           activityCountByDate[date] = (activityCountByDate[date] || 0) + 1;
         });
 
-        const calendar = Object.entries(activityCountByDate).map(
-          ([date, count]) => ({
-            date,
-            count,
-            level: Math.min(count, 4),
-          })
-        );
+        const calendar = Object.entries(activityCountByDate).map(([date, count]) => ({
+          date,
+          count,
+          level: Math.min(count, 4),
+        }));
 
         setCalendarData(calendar);
       } catch (err) {
@@ -170,9 +152,7 @@ const Profile = () => {
     };
 
     axios
-      .put("http://localhost:5000/api/auth/me", payload, {
-        withCredentials: true,
-      })
+      .put("http://localhost:5000/api/auth/me", payload, { withCredentials: true })
       .then((res) => {
         setUser(res.data.user || res.data);
         setProfilePic(res.data.user?.profilePic || res.data?.profilePic || null);
@@ -195,11 +175,7 @@ const Profile = () => {
         <div className="profile-box">
           <div className="profile-pic-wrapper">
             {profilePic ? (
-              <Lottie
-                animationData={avatarsMap[profilePic]}
-                loop
-                style={{ height: 120 }}
-              />
+              <Lottie animationData={avatarsMap[profilePic]} loop style={{ height: 120 }} />
             ) : (
               <img
                 src="https://static.vecteezy.com/system/resources/previews/036/280/650/large_2x/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg"
@@ -220,7 +196,7 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* Stats */}
+        {/* Stats Cards */}
         <div className="stats-card">
           <h3>{user.jobsPosted || 0}</h3>
           <p>Jobs Posted</p>
@@ -258,16 +234,174 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="timeline-section">
-          <Timeline activities={activities} />
-        </div>
+        {/* Ad Banner */}
+        <a
+          href="https://ruul.io/blog/freelancing-ideas-and-tips-for-students"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ad-banner"
+        >
+          <img
+            src="https://www.refrens.com/grow/wp-content/uploads/2022/03/10-tips-to-become-a-better-freelancer.png"
+            alt="Freelancing Tips"
+          />
+        </a>
       </div>
 
-      {/* Main */}
+      {/* Main Content */}
       <div className="profile-main">
-        {!editMode ? (
+        {editMode ? (
           <>
-            {/* Pie Chart */}
+            {/* Avatar Selector */}
+            <div className="avatar-selector-main">
+              {Object.keys(avatarsMap).map((id) => (
+                <div
+                  key={id}
+                  className={`avatar-item ${profilePic === id ? "selected" : ""}`}
+                  onClick={() => setProfilePic(id)}
+                >
+                  <Lottie animationData={avatarsMap[id]} loop style={{ height: 70 }} />
+                </div>
+              ))}
+            </div>
+
+            <form
+              className="profile-edit-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveProfile();
+              }}
+            >
+              {showSelector && (
+                <ProfilePicSelector
+                  onSelect={(id) => {
+                    setProfilePic(id);
+                    setUser({ ...user, profilePic: id });
+                    setShowSelector(false);
+                  }}
+                />
+              )}
+
+              {/* Basic Info */}
+              {["name", "branch", "college", "bio"].map((field) => (
+                <div className="form-group" key={field}>
+                  <label>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
+                  {field === "bio" ? (
+                    <textarea
+                      name={field}
+                      value={user[field] || ""}
+                      onChange={handleChange}
+                      placeholder={`Enter your ${field}`}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      name={field}
+                      value={user[field] || ""}
+                      onChange={handleChange}
+                      placeholder={`Enter your ${field}`}
+                    />
+                  )}
+                </div>
+              ))}
+
+              {/* Skills */}
+              <div className="form-group">
+                <label>Skills</label>
+                <div className="skills-edit">
+                  {(user.skills || []).map((s, idx) => (
+                    <span key={idx} className="skill-tag">
+                      {s} <FaTrash onClick={() => removeSkill(idx)} />
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    placeholder="Add a skill"
+                  />
+                  <button type="button" onClick={addSkill}>
+                    <FaPlus />
+                  </button>
+                </div>
+              </div>
+
+              {/* Tasks */}
+              <div className="form-group">
+                <label>Campus Gigs</label>
+                <ul>
+                  {(user.tasksDone || []).map((t, idx) => (
+                    <li key={idx}>
+                      {t.title} - {t.status} <FaTrash onClick={() => removeTask(idx)} />
+                    </li>
+                  ))}
+                </ul>
+                <input
+                  type="text"
+                  placeholder="Title"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Status"
+                  value={newTask.status}
+                  onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
+                />
+                <button type="button" onClick={addTask}>
+                  Add Task
+                </button>
+              </div>
+
+              {/* Portfolio */}
+              <div className="profile-section">
+                <h3>Portfolio</h3>
+                <p style={{ marginBottom: "1rem", color: "#555", fontSize: "0.8rem" }}>
+                  To add a new portfolio, please navigate to the Portfolio Page.
+                </p>
+                <div className="portfolio-grid">
+                  {portfolioProjects.length > 0 ? (
+                    portfolioProjects.map((proj, idx) => (
+                      <a
+                        key={idx}
+                        href={proj.link || `http://localhost:5000${proj.fileUrl}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="portfolio-card"
+                      >
+                        <p>{proj.title}</p>
+                      </a>
+                    ))
+                  ) : (
+                    <p>No portfolio added yet.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Contacts */}
+              {["phone", "github", "linkedin", "email"].map((field) => (
+                <div className="form-group" key={field}>
+                  <label>{field.charAt(0).toUpperCase() + field.slice(1)}</label>
+                  <input
+                    type={field === "email" ? "email" : "text"}
+                    name={`contacts.${field}`}
+                    value={user.contacts?.[field] || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+              ))}
+
+              <div className="form-buttons">
+                <button type="submit">Save</button>
+                <button type="button" onClick={() => setEditMode(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </>
+        ) : (
+          <>
+            {/* View Mode */}
             <div className="profile-section">
               <h3>Profile Insights</h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -294,7 +428,7 @@ const Profile = () => {
             <div className="profile-section">
               <h3>Skills</h3>
               <div className="skills-list">
-                {user.skills?.length
+                {user.skills && user.skills.length > 0
                   ? user.skills.map((skill, idx) => (
                       <span key={idx} className="skill-tag">
                         {skill}
@@ -308,7 +442,7 @@ const Profile = () => {
             <div className="profile-section">
               <h3>Campus Gigs Completed</h3>
               <ul className="task-list">
-                {user.tasksDone?.length
+                {user.tasksDone && user.tasksDone.length > 0
                   ? user.tasksDone.map((task, idx) => (
                       <li key={idx}>
                         {task.title} - <b>{task.status}</b>
@@ -326,9 +460,7 @@ const Profile = () => {
                   portfolioProjects.map((proj, idx) => (
                     <a
                       key={idx}
-                      href={
-                        proj.link || `http://localhost:5000${proj.fileUrl}`
-                      }
+                      href={proj.link || `http://localhost:5000${proj.fileUrl}`}
                       target="_blank"
                       rel="noreferrer"
                       className="portfolio-card"
@@ -385,67 +517,11 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Activity Calendar */}
-            <div className="calendar-container">
-              <h3 className="calendar-title">Activity Overview</h3>
-              {calendarData.length > 0 ? (
-                <>
-                  <div className="month-labels">
-                    {[
-                      "Jan",
-                      "Feb",
-                      "Mar",
-                      "Apr",
-                      "May",
-                      "Jun",
-                      "Jul",
-                      "Aug",
-                      "Sep",
-                      "Oct",
-                      "Nov",
-                      "Dec",
-                    ].map((month, i) => (
-                      <span key={i} className="month-label">
-                        {month}
-                      </span>
-                    ))}
-                  </div>
-                  <ActivityCalendar
-                    data={calendarData}
-                    labels={{
-                      legend: { less: "Less", more: "More" },
-                      totalCount: "{{count}} activities in {{year}}",
-                    }}
-                    theme={{
-                      light: [
-                        "#f3e8ff",
-                        "#d8b4fe",
-                        "#c084fc",
-                        "#a855f7",
-                        "#7e22ce",
-                      ],
-                      dark: [
-                        "#2e1065",
-                        "#4c1d95",
-                        "#6d28d9",
-                        "#8b5cf6",
-                        "#c4b5fd",
-                      ],
-                    }}
-                    colorScheme="light"
-                    hideColorLegend={false}
-                    blockSize={15}
-                    blockMargin={4}
-                    fontSize={14}
-                  />
-                </>
-              ) : (
-                <p className="text-gray-500 italic">No activity data yet</p>
-              )}
+            {/* Timeline */}
+            <div className="timeline-section">
+              <Timeline activities={activities} />
             </div>
           </>
-        ) : (
-          <p>Edit mode content here (already in your original file)</p>
         )}
       </div>
     </div>

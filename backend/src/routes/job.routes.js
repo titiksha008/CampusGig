@@ -19,26 +19,55 @@ import {
 const router = express.Router();
 
 /**
- * ------------------- Place a Bid -------------------
+ * ------------------- Place a Bid (Final Merged Route) -------------------
  */
 router.post("/:id/bid", auth, async (req, res) => {
   try {
     const { bidAmount } = req.body;
-    if (!bidAmount) return res.status(400).json({ message: "Bid amount required" });
+    const jobId = req.params.id;
 
-    // Ensure max 5 bids per job
-    const bidCount = await Bid.countDocuments({ job: req.params.id });
+    if (!bidAmount) {
+      return res.status(400).json({ message: "Bid amount required" });
+    }
+
+    // 🛑 Check if job exists
+    const job = await Job.findById(jobId);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    // 🛑 Prevent user from bidding on their own job
+    if (String(job.postedBy) === String(req.user._id)) {
+      return res.status(400).json({ message: "You cannot bid on your own job" });
+    }
+
+    // 🛑 Prevent duplicate bidding by the same user
+    const existingBid = await Bid.findOne({ job: jobId, student: req.user._id });
+    if (existingBid) {
+      return res.status(400).json({ message: "You have already placed a bid for this job" });
+    }
+
+    // 🛑 Ensure max 5 bids per job
+    const bidCount = await Bid.countDocuments({ job: jobId });
     if (bidCount >= 5) {
       return res.status(400).json({ message: "Maximum bids reached for this job" });
     }
 
+    // ✅ Create bid
     const bid = await Bid.create({
-      job: req.params.id,
+      job: jobId,
       student: req.user._id,
       bidAmount,
     });
-    
-        try {
+
+    // 📝 Log Activity
+    await Activity.create({
+      user: req.user._id,
+      job: jobId,
+      jobName: job.title || job.name || "Untitled Job",
+      action: "bid-placed",
+    });
+
+    // 📣 Send Notification (Non-blocking)
+    try {
       const notifBid = { userId: bid.student, message: req.body.message || "" };
       const notifJob = { posterId: job.postedBy, title: job.title, _id: job._id };
       notifyNewBid(notifBid, notifJob).catch(console.error);
@@ -77,28 +106,7 @@ router.get("/activities/me", auth, async (req, res) => {
   }
 });
 
-/**
- * ------------------- Get all bids for a job (poster only) -------------------
- */
-router.get("/:id/bids", auth, async (req, res) => {
-  try {
-    const job = await Job.findById(req.params.id);
-    if (!job) return res.status(404).json({ message: "Job not found" });
 
-    if (String(job.postedBy) !== String(req.user._id)) {
-      return res.status(403).json({ message: "Not authorized" });
-    }
-
-    const bids = await Bid.find({ job: req.params.id })
-      .populate("student", "name email rating")
-      .sort({ bidAmount: 1 });
-
-    res.json(bids);
-  } catch (err) {
-    console.error("Error fetching bids:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
 
 
 // ------------------- Select a Winning Bid -------------------
@@ -252,8 +260,7 @@ router.put("/:id/accept", auth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-// ------------------- Mark Job Completed -------------------
+});// ------------------- Mark Job Completed -------------------
 router.put("/:id/complete", auth, async (req, res) => {
   try {
     const id = req.params.id;
@@ -274,17 +281,24 @@ router.put("/:id/complete", auth, async (req, res) => {
       console.log('❌ Invalid job status:', assignedJob.status);
       return res.status(400).json({ message: "Only accepted jobs can be marked as completed" });
     }
- await Activity.create({
-      user: req.user._id,
-      job: job._id,
-      jobName: job.title,
-      action: "completed",
-    });
+
     // ✅ Fetch related Job and Student data in parallel
     const [job, student] = await Promise.all([
       Job.findById(assignedJob.job).select('title postedBy'),
       User.findById(assignedJob.student).select('name email'),
     ]);
+
+    if (!job) {
+      return res.status(404).json({ message: "Related job not found" });
+    }
+
+    // ✅ Create Activity *after* job is fetched
+    await Activity.create({
+      user: req.user._id,
+      job: job._id,
+      jobName: job.title,
+      action: "completed",
+    });
 
     // ✅ Update statuses
     assignedJob.status = "completed";
@@ -296,7 +310,7 @@ router.put("/:id/complete", auth, async (req, res) => {
     const populatedAssignedJob = {
       ...assignedJob.toObject(),
       job,
-      student
+      student,
     };
 
     console.log('📧 Sending completion notifications...');
@@ -310,7 +324,7 @@ router.put("/:id/complete", auth, async (req, res) => {
         message: "✅ Job marked as completed",
         assignedJob: populatedAssignedJob,
         notification: notifResult || null,
-        nextStep: "The job poster will be notified to provide a rating."
+        nextStep: "The job poster will be notified to provide a rating.",
       });
     } catch (notifyErr) {
       console.error("❌ Error sending completion notifications:", notifyErr);
@@ -320,7 +334,7 @@ router.put("/:id/complete", auth, async (req, res) => {
         message: "✅ Job marked as completed (notification failed)",
         assignedJob: populatedAssignedJob,
         notification: { success: false, error: notifyErr?.message || String(notifyErr) },
-        nextStep: "The job poster will be notified to provide a rating."
+        nextStep: "The job poster will be notified to provide a rating.",
       });
     }
   } catch (err) {
@@ -332,69 +346,60 @@ router.put("/:id/complete", auth, async (req, res) => {
 router.post("/:id/rate", auth, async (req, res) => {
   try {
     const { rating, review } = req.body;
-    const jobId = req.params.id;
-    console.log("📝 Processing rating submission:", { jobId, rating, review });
+    const id = req.params.id;
+    console.log("📝 Rating incoming:", { id, rating, review });
 
-    // ✅ Try finding AssignedJob by ID first; fallback to job reference
-    let assignedJob = await AssignedJob.findById(jobId)
+    // Universal lookup: supports both assignedJobId OR jobId
+    let assignedJob = await AssignedJob.findOne({
+      $or: [
+        { _id: id },
+        { job: id }
+      ]
+    })
       .populate("student", "name email")
       .populate("job", "title postedBy");
 
     if (!assignedJob) {
-      console.log("⚠️ AssignedJob not found by ID, trying job field lookup...");
-      assignedJob = await AssignedJob.findOne({ job: jobId })
-        .populate("student", "name email")
-        .populate("job", "title postedBy");
-    }
-
-    if (!assignedJob) {
-      console.log("❌ Assigned job not found for ID:", jobId);
+      console.log("❌ Assigned job not found for:", id);
       return res.status(404).json({ message: "Assigned job not found" });
     }
 
-    // ✅ Ensure the job has been completed before rating
     if (assignedJob.status !== "completed") {
-      console.log("❌ Invalid job status for rating:", assignedJob.status);
       return res.status(400).json({ message: "Job not completed yet" });
     }
 
-    // ✅ Update rating details
     assignedJob.rating = rating;
     assignedJob.review = review;
     assignedJob.status = "rated";
     await assignedJob.save();
 
-    // ✅ Update student's average rating
+    // Update user's rating
     const user = await User.findById(assignedJob.student);
     if (user) {
       user.ratings = user.ratings || [];
       user.ratings.push(rating);
       user.rating = user.ratings.reduce((a, b) => a + b, 0) / user.ratings.length;
       await user.save();
-      console.log("⭐ Updated user average rating:", user.rating);
     }
 
-    // ✅ Non-blocking notification
     try {
-      console.log("📧 Sending rating notification...");
       await notifyJobRated(assignedJob);
-      console.log("✅ Rating notification sent successfully.");
-    } catch (notifyErr) {
-      console.error("❌ Failed to send rating notification:", notifyErr);
+    } catch (e) {
+      console.error("Notify failed", e);
     }
 
-    // ✅ Respond to client
     res.json({
-      message: "✅ Rating submitted successfully",
+      message: "Rating submitted",
       assignedJob,
       updatedRating: user?.rating || null,
-      nextStep: "The student has been rated; feedback stored successfully."
     });
+
   } catch (err) {
     console.error("❌ Error submitting rating:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // ------------------- Get Accepted Jobs for Current User -------------------
 router.get("/accepted", auth, async (req, res) => {

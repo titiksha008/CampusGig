@@ -1,3 +1,4 @@
+//frontend/pages/jobsList.jsx
 import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import "./AppStyles.css";
@@ -362,18 +363,20 @@ export default function JobsList({ user, setUser }) {
         </select>
       </div>
 
+   
+
       <h2>Recommended Jobs</h2>
       {sortedRecommendedJobs.length > 0 ? (
         <ul>{sortedRecommendedJobs.map(renderJobCard)}</ul>
       ) : (
-        <p>No recommended jobs based on your skills.</p>
+        <p className="no-jobs-msg">No recommended jobs based on your skills.</p>
       )}
 
       <h2>All Jobs</h2>
       {sortedAllJobs.length > 0 ? (
         <ul>{sortedAllJobs.map(renderJobCard)}</ul>
       ) : (
-        <p>No other jobs available right now.</p>
+        <p className="no-jobs-msg">No other jobs available right now.</p>
       )}
 
       {/* 🆕 Bid modal */}

@@ -31,18 +31,12 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        {/* Navbar visible on all pages */}
         <Navbar />
-
-        {/* Main Routes */}
         <div style={{ paddingTop: "64px" }}>
           <Routes>
-            {/* Public Routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
-
-            {/* Job Pages */}
             <Route path="/jobs" element={<JobsList />} />
             <Route path="/post-job" element={<PostJob />} />
             <Route path="/my-jobs" element={<MyJobs />} />
@@ -50,28 +44,20 @@ export default function App() {
             <Route path="/saved-jobs" element={<SavedJobs />} />
             <Route path="/jobs/:jobId/bids" element={<JobBids />} />
             <Route path="/accepted-jobs" element={<AcceptedJobsDashboard />} />
-
-            {/* Profile & Portfolio */}
             <Route path="/profile" element={<Profile />} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/portfolio/:userId" element={<Portfolio />} />
-
-            {/* Chat */}
             <Route path="/chat" element={<ChatList />} />
             <Route
               path="/chat/:posterId/:jobId/:acceptedUserId"
               element={<UserChatWrapper />}
             />
-
-            {/* Activity Timeline */}
             <Route path="/activities" element={<ActivityTimelinePage />} />
-
-            {/* Dashboard */}
             <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </div>
 
-        {/* Global Toast Notifications */}
+        {/* Toast notifications */}
         <ToastContainer
           position="top-right"
           autoClose={3000}
@@ -83,18 +69,14 @@ export default function App() {
           theme="colored"
         />
 
-        {/* Floating Chat Widget */}
         <ChatWidget />
       </BrowserRouter>
     </AuthProvider>
   );
 }
 
-// Wrapper to pass current user safely
 function UserChatWrapper() {
   const { user, loading } = useAuth();
-
   if (loading) return <div>Loading...</div>;
-
   return <UserChat currentUserId={user?._id} />;
 }

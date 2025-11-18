@@ -1,8 +1,14 @@
+// sms.js
 // backend/utils/sms.js
 import fetch from 'node-fetch'; // npm install node-fetch
 
 export async function sendSMS(to, message) {
     try {
+        if (!to || !message) {
+            console.warn('⚠ SMS skipped: Missing phone number or message');
+            return;
+        }
+
         const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {
             method: 'POST',
             headers: {
@@ -15,7 +21,7 @@ export async function sendSMS(to, message) {
                 message: message,
                 language: 'english',
                 flash: 0,
-                numbers: to.replace(/\D/g, '') // remove + or spaces
+                numbers: String(to).replace(/\D/g, '') // remove + or spaces
             })
         });
 

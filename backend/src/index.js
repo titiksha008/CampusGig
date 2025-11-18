@@ -1,4 +1,3 @@
-// index.js
 import "dotenv/config";
 import { connectDB } from "./config/db.js";
 import app from "./app.js";
@@ -6,49 +5,43 @@ import http from "http";
 import { Server } from "socket.io";
 import mongoose from "mongoose";
 import Chat from "./models/Chat.js";
-import { notifyChatMessage } from "./utils/notification.js";
 
 const PORT = process.env.PORT || 5000;
 
-// ✅ Connect DB
 await connectDB();
 
-// ✅ Create HTTP server
 const server = http.createServer(app);
 
-// ✅ Initialize Socket.IO
 const io = new Server(server, {
   cors: { origin: "http://localhost:5173" },
 });
 
-const users = {}; // store userId -> socket.id mapping
+const users = {}; // userId -> socket.id
 
 io.on("connection", (socket) => {
-  console.log("🟢 New client connected:", socket.id);
+  console.log("New client connected:", socket.id);
   socket.emit("me", socket.id);
 
-  // ---------------- CHAT EVENTS ----------------
+  // CHAT
   socket.on("joinRoom", (roomId) => {
     socket.join(roomId);
-    console.log(`${socket.id} joined room ${roomId}`);
+    console.log(socket.id, "joined room", roomId);
   });
 
   socket.on("leaveRoom", (roomId) => {
     socket.leave(roomId);
-    console.log(`${socket.id} left room ${roomId}`);
+    console.log(socket.id, "left room", roomId);
   });
 
-  // ✅ Single clean sendMessage handler
   socket.on("sendMessage", async (msgData) => {
     try {
-      const { posterId, acceptedUserId, jobId, senderId, text, file, fileType } = msgData;
+      const { posterId, acceptedUserId, jobId, senderId } = msgData;
 
       const posterObjId = new mongoose.Types.ObjectId(posterId);
       const acceptedObjId = new mongoose.Types.ObjectId(acceptedUserId);
       const senderObjId = new mongoose.Types.ObjectId(senderId);
       const jobObjId = new mongoose.Types.ObjectId(jobId);
 
-      // Find or create chat between these two participants
       let chat = await Chat.findOne({
         $or: [
           { posterId: posterObjId, acceptedUserId: acceptedObjId },
@@ -64,12 +57,11 @@ io.on("connection", (socket) => {
         });
       }
 
-      // Push message (with file support)
       chat.messages.push({
         senderId: senderObjId,
-        text: text || "",
-        file: file || "",
-        fileType: fileType || "",
+        text: msgData.text || "",
+        file: msgData.file || "",
+        fileType: msgData.fileType || "",
         jobId: jobObjId,
       });
 
@@ -78,28 +70,12 @@ io.on("connection", (socket) => {
       const roomId = [posterId, acceptedUserId, jobId].sort().join("-");
       const newMsg = chat.messages[chat.messages.length - 1];
 
-      // Emit to both participants
       io.to(roomId).emit("newMessage", newMsg);
-
-      // ✅ Send email notification to other participant(s)
-      try {
-        const participantIds = [posterId, acceptedUserId]
-          .filter(Boolean)
-          .map(String);
-        const recipients = participantIds.filter((id) => id !== String(senderId));
-
-        for (const rid of recipients) {
-          notifyChatMessage({ senderId, recipientId: rid, jobId, text }).catch(console.error);
-        }
-      } catch (notifyErr) {
-        console.error("❌ Email notifyChatMessage failed:", notifyErr);
-      }
     } catch (err) {
-      console.error("❌ Socket sendMessage error:", err);
+      console.error("Socket sendMessage error:", err);
     }
   });
 
-  // ✅ Message seen handler
   socket.on("messageSeen", async ({ posterId, acceptedUserId, jobId, viewerId }) => {
     try {
       const posterObjId = new mongoose.Types.ObjectId(posterId);
@@ -125,62 +101,76 @@ io.on("connection", (socket) => {
       const roomId = [posterId, acceptedUserId, jobId].sort().join("-");
       io.to(roomId).emit("messageSeenUpdate", chat.messages);
     } catch (err) {
-      console.error("❌ Socket messageSeen error:", err);
+      console.error("Socket messageSeen error:", err);
     }
   });
 
-  // ---------------- VIDEO CALL EVENTS ----------------
+  // VIDEO CALL
   socket.on("registerUser", (userId) => {
+    socket.userId = userId;
     users[userId] = socket.id;
     console.log(`🟢 Registered user ${userId} with socket ${socket.id}`);
     io.emit("onlineUsers", Object.keys(users));
   });
 
   socket.on("callUser", (data) => {
-    const targetSocket = users[data.userToCall];
-    if (targetSocket) {
+    const targetSocketId = users[data.userToCall];
+    if (targetSocketId) {
       console.log(`📞 Call initiated from ${data.from} to ${data.userToCall}`);
-      io.to(targetSocket).emit("callIncoming", {
+      io.to(targetSocketId).emit("callIncoming", {
         signal: data.signal,
         from: data.from,
         name: data.name,
       });
     } else {
-      console.log(`⚠️ User ${data.userToCall} not online`);
+      console.log(`⚠ User ${data.userToCall} not online`);
     }
   });
 
   socket.on("answerCall", (data) => {
-    console.log(`✅ Call accepted by ${data.to}`);
-    io.to(data.to).emit("callAccepted", data.signal);
+    const targetSocketId = users[data.to];
+    if (targetSocketId) {
+      console.log(`✅ Forwarding answer from ${socket.userId} to ${data.to}`);
+      io.to(targetSocketId).emit("callAccepted", data.signal);
+    }
   });
 
   socket.on("rejectCall", (data) => {
-    console.log(`❌ Call rejected by ${data.to}`);
-    io.to(data.to).emit("callRejected");
+    const targetSocketId = users[data.to];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("callRejected");
+    }
   });
 
-  // ✅ End call for both sides
+  socket.on("iceCandidate", ({ candidate, to }) => {
+    const targetSocketId = users[to];
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("iceCandidate", candidate);
+    }
+  });
+
   socket.on("endCall", ({ from, to }) => {
-    console.log(`📴 Call ended by ${from}`);
+    if (!from || !to) {
+      console.log("endCall missing from/to", { from, to });
+      return;
+    }
+    console.log("📴 endCall received:", { from, to });
 
     const callerSocket = users[from];
     const receiverSocket = users[to];
 
     if (receiverSocket) {
-      io.to(receiverSocket).emit("callEnded");
+      io.to(receiverSocket).emit("callEnded", { by: from });
       console.log(`📤 Sent callEnded to receiver ${to}`);
     }
-
     if (callerSocket) {
-      io.to(callerSocket).emit("callEnded");
+      io.to(callerSocket).emit("callEnded", { by: from });
       console.log(`📤 Sent callEnded to caller ${from}`);
     }
 
     console.log(`✅ Call fully ended between ${from} and ${to}`);
   });
 
-  // ✅ Handle disconnection
   socket.on("disconnect", () => {
     for (const id in users) {
       if (users[id] === socket.id) {
@@ -193,5 +183,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ Start server
-server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+server.listen(PORT, () =>
+  console.log(`🚀 Server running on http://localhost:${PORT}`)
+);

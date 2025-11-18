@@ -14,9 +14,7 @@ import paymentRoutes from "./routes/payment.routes.js";
 
 const app = express();
 
-/* -------------------------------------------------------
-   ✅ 1. RAW BODY FOR RAZORPAY WEBHOOK (must come first)
-   ------------------------------------------------------- */
+
 app.use("/api/webhooks/razorpay", (req, res, next) => {
   const chunks = [];
   req.on("data", (chunk) => chunks.push(chunk));
