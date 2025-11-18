@@ -21,6 +21,8 @@ import Portfolio from "./pages/Portfolio.jsx";
 import MyBids from "./pages/MyBids.jsx";
 import SavedJobs from "./pages/SavedJobs.jsx";
 import ActivityTimelinePage from "./components/Timeline/ActivityTimelinePage.jsx";
+import DiscussionBoard from "./pages/DiscussionBoard.jsx";         {/* ⬅️ NEW import */}
+import SingleDiscussionPost from "./pages/SingleDiscussionPost.jsx"
 
 // Components
 import ChatWidget from "./components/ChatWidget.jsx";
@@ -47,6 +49,9 @@ export default function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/portfolio/:userId" element={<Portfolio />} />
+            {/* ⬅️ Discussion Board Routes */}
+            <Route path="/discussion" element={<DiscussionBoard />} /> 
+            <Route path="/discussion/:id" element={<SingleDiscussionPost />} />
             <Route path="/chat" element={<ChatList />} />
             <Route
               path="/chat/:posterId/:jobId/:acceptedUserId"

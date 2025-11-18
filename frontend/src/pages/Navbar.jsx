@@ -1,8 +1,9 @@
+// frontend/src/pages/Navbar.jsx
 import { Link, useNavigate } from "react-router-dom";
 import "./AppStyles.css";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { FaComments } from "react-icons/fa";
+import { FaComments, FaClipboardList } from "react-icons/fa"; // ⬅️ Imported FaClipboardList for a new icon
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -32,6 +33,11 @@ export default function Navbar() {
       <div className="nav-center">
         <Link to="/jobs">Jobs</Link>
         <Link to="/post-job">Post Job</Link>
+        {/* 🚀 NEW DISCUSSION BOARD LINK */}
+        <Link to="/discussion" className="nav-link-discussion">
+          <FaClipboardList size={18} className="mr-1" /> {/* Use an icon for visual distinction */}
+          Discussion
+        </Link>
         {loggedIn && <Link to="/accepted-jobs">Accepted Jobs</Link>}
         {loggedIn && <Link to="/my-jobs">My Jobs</Link>}
       </div>
@@ -50,7 +56,7 @@ export default function Navbar() {
               <Link to="/profile">View Profile</Link>
               <Link to={`/portfolio/${user._id}`}>Portfolio</Link>
               <Link to="/mybids">My Bids / Earnings</Link>
-              <Link to="/saved-jobs">Saved Jobs</Link> {/* ✅ Moved here */}
+              <Link to="/saved-jobs">Saved Jobs</Link>
               <button onClick={handleLogout} className="logout-btn">
                 Logout
               </button>

@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes.js";
 import jobRoutes from "./routes/job.routes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import portfolioRoutes from "./routes/portfolio.routes.js";
+import discussionRoutes from "./routes/discussion.routes.js";
 import path from "path";
 import userRoutes from "./routes/user.routes.js";          // ✅ added
 import webhooksRoutes from "./routes/webhooks.routes.js";  // ✅ Razorpay webhooks
@@ -44,7 +45,7 @@ app.use("/api/jobs", jobRoutes);
 
 app.use("/api/chat", chatRoutes);
 app.use("/api/portfolio", portfolioRoutes); // ✅ matches frontend
-
+app.use("/api/discussions", discussionRoutes);
 app.use("/api", webhooksRoutes);  
 app.use("/api/users", userRoutes);          // ✅ added user routes
 app.use("/api/payment/jobs", paymentRoutes);

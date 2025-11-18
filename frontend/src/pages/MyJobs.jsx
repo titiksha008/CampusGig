@@ -4,7 +4,7 @@ import api from "../services/api";
 import Navbar from "./Navbar";
 import { useAuth } from "../context/AuthContext";
 import { FaStar } from "react-icons/fa";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 import "./AppStyles.css";
 
 const MyJobs = ({ onProfileUpdate }) => {
@@ -43,13 +43,14 @@ const MyJobs = ({ onProfileUpdate }) => {
     }
 
     try {
-      await api.post(/jobs/${assignedJobId}/rate, {
+      // FIX: Changed from regex literal /.../ to template literal `...`
+      await api.post(`/jobs/${assignedJobId}/rate`, {
         rating: stars,
         review: comment,
       });
 
       toast.success("Thank you for your feedback!");
-      fetchJobs(); 
+      fetchJobs();
       if (onProfileUpdate) onProfileUpdate();
 
       setRatingData((prev) => ({
@@ -65,7 +66,8 @@ const MyJobs = ({ onProfileUpdate }) => {
   // Accept Bid
   const handleAcceptBid = async (jobId, bidId) => {
     try {
-      const res = await api.put(/jobs/${jobId}/select/${bidId});
+      // FIX: Changed from regex literal /.../ to template literal `...`
+      const res = await api.put(`/jobs/${jobId}/select/${bidId}`);
       toast.success(res.data.message || "Bid accepted successfully!", {
         position: "top-right",
         autoClose: 3000,
@@ -75,7 +77,7 @@ const MyJobs = ({ onProfileUpdate }) => {
         draggable: true,
         theme: "colored",
       });
-      fetchJobs(); 
+      fetchJobs();
     } catch (err) {
       console.error("Error accepting bid:", err);
       toast.error(err.response?.data?.message || "Failed to accept bid.", {
@@ -115,7 +117,7 @@ const MyJobs = ({ onProfileUpdate }) => {
                     {job.status === "pending"
                       ? "Not yet accepted"
                       : job.status === "accepted"
-                      ? Accepted by ${job.acceptedBy?.name || "someone"}
+                      ? `Accepted by ${job.acceptedBy?.name || "someone"}` // FIX: Changed to template literal
                       : job.status === "completed"
                       ? "Completed"
                       : job.status === "rated"
@@ -128,7 +130,8 @@ const MyJobs = ({ onProfileUpdate }) => {
                   <button
                     className="btn-accept"
                     onClick={() => {
-                      navigate(/jobs/${job._id}/bids);
+                      // FIX: Changed from regex literal /.../ to template literal `...`
+                      navigate(`/jobs/${job._id}/bids`);
                       // Removed toast here to prevent duplicate
                     }}
                   >
