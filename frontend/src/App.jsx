@@ -21,8 +21,16 @@ import Portfolio from "./pages/Portfolio.jsx";
 import MyBids from "./pages/MyBids.jsx";
 import SavedJobs from "./pages/SavedJobs.jsx";
 import ActivityTimelinePage from "./components/Timeline/ActivityTimelinePage.jsx";
-import DiscussionBoard from "./pages/DiscussionBoard.jsx";         {/* ⬅️ NEW import */}
-import SingleDiscussionPost from "./pages/SingleDiscussionPost.jsx"
+
+// Discussion Feature (NEW)
+import DiscussionBoard from "./pages/DiscussionBoard.jsx";
+import SingleDiscussionPost from "./pages/SingleDiscussionPost.jsx";
+
+// Admin Dashboard
+import AdminLayout from "./pages/AdminDashboard/AdminLayout";
+import AdminUsers from "./pages/AdminDashboard/AdminUsers";
+import AdminJobs from "./pages/AdminDashboard/AdminJobs";
+import AdminUserDetails from "./pages/AdminDashboard/AdminUserDetails";
 
 // Components
 import ChatWidget from "./components/ChatWidget.jsx";
@@ -33,12 +41,17 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        {/* Navbar always visible */}
         <Navbar />
+
         <div style={{ paddingTop: "64px" }}>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
+
+            {/* User Pages */}
             <Route path="/jobs" element={<JobsList />} />
             <Route path="/post-job" element={<PostJob />} />
             <Route path="/my-jobs" element={<MyJobs />} />
@@ -47,18 +60,28 @@ export default function App() {
             <Route path="/jobs/:jobId/bids" element={<JobBids />} />
             <Route path="/accepted-jobs" element={<AcceptedJobsDashboard />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/activities" element={<ActivityTimelinePage />} />
+
+            {/* Portfolio */}
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/portfolio/:userId" element={<Portfolio />} />
-            {/* ⬅️ Discussion Board Routes */}
-            <Route path="/discussion" element={<DiscussionBoard />} /> 
+
+            {/* Discussion Feature (from 2nd code) */}
+            <Route path="/discussion" element={<DiscussionBoard />} />
             <Route path="/discussion/:id" element={<SingleDiscussionPost />} />
+
+            {/* Chat System */}
             <Route path="/chat" element={<ChatList />} />
             <Route
               path="/chat/:posterId/:jobId/:acceptedUserId"
               element={<UserChatWrapper />}
             />
-            <Route path="/activities" element={<ActivityTimelinePage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard/*" element={<AdminLayout />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/jobs" element={<AdminJobs />} />
+            <Route path="/admin/users/:id" element={<AdminUserDetails />} />
           </Routes>
         </div>
 
@@ -74,12 +97,14 @@ export default function App() {
           theme="colored"
         />
 
+        {/* Chat widget always visible */}
         <ChatWidget />
       </BrowserRouter>
     </AuthProvider>
   );
 }
 
+// Wrapper for safe UserChat rendering
 function UserChatWrapper() {
   const { user, loading } = useAuth();
   if (loading) return <div>Loading...</div>;

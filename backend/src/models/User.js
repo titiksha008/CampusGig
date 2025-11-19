@@ -1,3 +1,25 @@
+// //models/User.js
+// import mongoose from "mongoose";
+
+// const userSchema = new mongoose.Schema(
+//   {
+//     name: { type: String, required: true },
+//     email: { type: String, required: true, unique: true },
+//     password: { type: String, required: true }, // hashed
+//     role: { type: String, enum: ["employer", "freelancer"], required: true },
+//     collegeId: { type: String, required: true },
+//     branch: String,
+//     year: String,
+//     skills: [String],
+//     portfolio: String,
+//     rating: { type: Number, default: 0 },
+//     badges: [String]
+//   },
+//   { timestamps: true }
+// );
+
+// export default mongoose.model("User", userSchema);
+
 // models/User.js
 import mongoose from "mongoose";
 
@@ -6,7 +28,7 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true }, // hashed password
-    role: { type: String, enum: ["employer", "freelancer"], required: true },
+    role: { type: String, enum: ["employer", "freelancer","admin"], required: true },
     collegeId: { type: String, required: true },
     branch: { type: String },
     college: { type: String },
@@ -59,6 +81,4 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
-export default mongoose.models.User || mongoose.model("User", userSchema);
-
+export default mongoose.model("User", userSchema);

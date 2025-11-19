@@ -1,3 +1,4 @@
+//auth.controller.js
 
 // auth.controller.js
 import bcrypt from "bcryptjs";
@@ -62,6 +63,11 @@ export const login = async (req, res) => {
 
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(400).json({ message: "Invalid credentials" });
+
+    // ✅ Check if admin route login
+    if (req.body.adminLogin && user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Not an admin." });
+    }
 
     generateToken(res, user._id);
 
@@ -130,7 +136,7 @@ export const updateProfile = async (req, res) => {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user._id,
       req.body,
       { new: true, runValidators: true }
     ).select("-password");
