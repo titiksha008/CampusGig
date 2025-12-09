@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import "./discussion.css";
 
 const INITIAL_LIMIT = 2;
-const FETCH_ALL_LIMIT = 10000; // large enough to fetch "all" posts for tags & showAll
+const FETCH_ALL_LIMIT = 10000;
 
 export default function DiscussionBoard() {
   const { user } = useAuth();
@@ -30,10 +30,11 @@ export default function DiscussionBoard() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tagsInput, setTagsInput] = useState("");
+  const [files, setFiles] = useState([]);
 
   const topRef = useRef(null);
 
-  // Fetch ALL posts once (for tags & showAll)
+  // Fetch ALL posts once
   const fetchAll = async () => {
     try {
       setLoading(true);
@@ -41,11 +42,12 @@ export default function DiscussionBoard() {
       const arr = Array.isArray(res?.data?.discussions) ? res.data.discussions : [];
       setAllDiscussions(arr);
 
-      // extract all tags from all posts, unique
-      const allTags = Array.from(new Set(arr.flatMap((d) => (Array.isArray(d.tags) ? d.tags : []))));
+      const allTags = Array.from(
+        new Set(arr.flatMap((d) => (Array.isArray(d.tags) ? d.tags : [])))
+      );
       setAvailableTags(allTags);
     } catch (err) {
-      console.error("Failed to fetch discussions (all):", err);
+      console.error("Failed to load discussions:", err);
       alert("Failed to load discussions.");
     } finally {
       setLoading(false);
@@ -54,20 +56,21 @@ export default function DiscussionBoard() {
 
   useEffect(() => {
     fetchAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync URL tag param -> selectedTag
+  // Sync URL tag filter
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const t = params.get("tag") || "";
+
     if (t) {
       setSelectedTag(t);
-      // set filtered and expand to show results
-      const matched = allDiscussions.filter((p) => Array.isArray(p.tags) && p.tags.includes(t));
+      const matched = allDiscussions.filter(
+        (p) => Array.isArray(p.tags) && p.tags.includes(t)
+      );
       setFilteredDiscussions(matched);
       setShowAll(true);
-      // scroll to top so user sees list
+
       setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     } else {
       setSelectedTag("");
@@ -75,7 +78,7 @@ export default function DiscussionBoard() {
     }
   }, [location.search, allDiscussions]);
 
-  // Visible items (computed)
+  // Visible items
   const visibleItems = (() => {
     if (selectedTag && filteredDiscussions) return filteredDiscussions;
     if (showAll) return allDiscussions;
@@ -89,10 +92,7 @@ export default function DiscussionBoard() {
       setFilteredDiscussions(null);
       return;
     }
-
-    // set URL param (so direct links work)
     navigate(`?tag=${encodeURIComponent(tag)}`, { replace: true });
-    // location.search effect will handle the rest
   };
 
   const openDiscussion = (id) => navigate(`/discussion/${id}`);
@@ -101,49 +101,53 @@ export default function DiscussionBoard() {
     const next = !showAll;
     setShowAll(next);
 
-    // if collapsing, clear any tag filter if one is active (optional)
-    if (!next) {
-      // scroll to top of list
-      setTimeout(() => {
-        if (topRef.current) topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 60);
-      // if we had a tag selected, we keep it but also collapse to top
-      // you might want to clear tag on collapse; keeping tag is more intuitive
-    } else {
-      // if expanding, scroll slightly so user sees new items
-      setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-    }
+    setTimeout(() => {
+      if (topRef.current) {
+        topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 60);
   };
 
+  // ---------------------------
+  // ⭐ UPDATED SUBMIT WITH FILES
+  // ---------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!user) return alert("You must be logged in to post.");
-    if (!title.trim() || !content.trim()) return alert("Title and content required.");
+    if (!title.trim() || !content.trim()) return alert("Title & content required.");
 
     try {
       setCreating(true);
-      const tagList = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
-      const res = await createDiscussion({
-        title: title.trim(),
-        content: content.trim(),
-        tags: tagList,
-      });
 
-      // prepend to allDiscussions so it appears immediately
+      const formData = new FormData();
+      formData.append("title", title.trim());
+      formData.append("content", content.trim());
+
+      const tagList = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+      tagList.forEach((t) => formData.append("tags", t));
+
+      // Add attachments
+      files.forEach((file) => formData.append("attachments", file));
+
+      const res = await createDiscussion(formData);
+
+      // Add newly created post to list
       setAllDiscussions((prev) => [res.data, ...prev]);
 
-      // update tags
+      // Add new tags
       if (tagList.length) {
         setAvailableTags((prev) => Array.from(new Set([...(prev || []), ...tagList])));
       }
 
+      // Reset form
       setTitle("");
       setContent("");
       setTagsInput("");
+      setFiles([]);
 
-      // Ensure newly created post is visible (expand and scroll to top)
       setShowAll(true);
-      setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+      setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
     } catch (err) {
       console.error("Create failed:", err);
       alert("Could not post discussion.");
@@ -165,9 +169,10 @@ export default function DiscussionBoard() {
         </div>
       )}
 
-      {/* All tags always visible */}
+      {/* TAG BAR */}
       <div className="tag-bar">
         <span className="filter-label">Filter:</span>
+
         {availableTags.length === 0 && !loading ? (
           <span className="no-posts">No tags yet</span>
         ) : (
@@ -182,31 +187,28 @@ export default function DiscussionBoard() {
             </button>
           ))
         )}
-        <button className="tag-clear" onClick={() => handleTagClick("")}>Clear</button>
+
+        <button className="tag-clear" onClick={() => handleTagClick("")}>
+          Clear
+        </button>
       </div>
 
-      {loading && (
-        <Skeleton count={INITIAL_LIMIT} height={90} className="skeleton-loader" />
-      )}
+      {/* LOADING */}
+      {loading && <Skeleton count={INITIAL_LIMIT} height={90} className="skeleton-loader" />}
 
-      <div className={`discussion-list ${showAll ? "expanded" : "collapsed"}`} aria-live="polite">
+      {/* LIST */}
+      <div className={`discussion-list ${showAll ? "expanded" : "collapsed"}`}>
         {visibleItems.length === 0 && !loading ? (
           <p className="no-posts">No discussions yet. Start the conversation!</p>
         ) : (
           visibleItems.map((d) => (
-            <div
-              key={d._id}
-              className="discussion-card"
-              onClick={() => openDiscussion(d._id)}
-            >
+            <div key={d._id} className="discussion-card" onClick={() => openDiscussion(d._id)}>
               <h3 className="discussion-card-title">
                 {d.title || d.content?.slice(0, 120) || "Untitled"}
               </h3>
 
               <p className="discussion-card-content">
-                {d.content?.length > 140
-                  ? d.content.substring(0, 140) + "..."
-                  : d.content}
+                {d.content?.length > 140 ? d.content.substring(0, 140) + "..." : d.content}
               </p>
 
               <div className="tag-container">
@@ -228,11 +230,7 @@ export default function DiscussionBoard() {
               <div className="meta-info">
                 <span>👤 {d.author?.name || "Unknown"}</span>
                 <span>
-                  💬{" "}
-                  {Array.isArray(d.comments)
-                    ? d.comments.length
-                    : d.commentsCount ?? 0}{" "}
-                  replies
+                  💬 {Array.isArray(d.comments) ? d.comments.length : d.commentsCount ?? 0} replies
                 </span>
               </div>
             </div>
@@ -240,7 +238,7 @@ export default function DiscussionBoard() {
         )}
       </div>
 
-      {/* See More / See Less */}
+      {/* SEE MORE */}
       {allDiscussions.length > INITIAL_LIMIT && (
         <button className="see-more-btn" onClick={toggleShowAll}>
           {showAll ? "See Less" : `See More (${allDiscussions.length - INITIAL_LIMIT} more)`}
@@ -249,8 +247,12 @@ export default function DiscussionBoard() {
 
       <hr className="divider" />
 
+      {/* -----------------------------
+          CREATE DISCUSSION FORM
+      ------------------------------ */}
       <div className="discussion-form-card">
         <h3 className="section-title">📝 Start a New Discussion</h3>
+
         <form onSubmit={handleSubmit} autoComplete="off">
           <input
             type="text"
@@ -274,6 +276,50 @@ export default function DiscussionBoard() {
             value={tagsInput}
             onChange={(e) => setTagsInput(e.target.value)}
           />
+
+          {/* ⭐ FILE INPUT */}
+          <input
+            type="file"
+            multiple
+            className="input-field"
+            onChange={(e) => setFiles(Array.from(e.target.files))}
+          />
+
+          {/* ⭐ FILE PREVIEW */}
+          {files.length > 0 && (
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 15 }}>
+              {files.map((f, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: 10,
+                    borderRadius: 10,
+                    border: "1px solid #ddd",
+                    fontSize: 12,
+                  }}
+                >
+                  {f.name}
+                  <button
+                    style={{
+                      display: "block",
+                      marginTop: 6,
+                      background: "transparent",
+                      color: "#b22",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 12,
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setFiles(files.filter((_, idx) => idx !== i));
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           <button className="post-btn" type="submit" disabled={creating}>
             {creating ? "Posting..." : "Post Discussion"}

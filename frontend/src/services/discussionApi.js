@@ -2,7 +2,11 @@
 import api from "./api"; // your axios instance
 
 export const getAllDiscussions = (query = "") => api.get(`/discussions${query}`);
-export const createDiscussion = (data) => api.post("/discussions", data);
+export const createDiscussion = (formData) =>
+  api.post("/discussions", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
 export const getDiscussionById = (id) => api.get(`/discussions/${id}`);
 
 // addReplyToDiscussion supports files: expects FormData (text, parentId, attachments[])
