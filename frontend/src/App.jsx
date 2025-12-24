@@ -37,6 +37,11 @@ import ChatWidget from "./components/ChatWidget.jsx";
 import UserChat from "./components/UserChat.jsx";
 import ChatList from "./components/ChatList.jsx";
 
+import NewsList from "./pages/NewsList";
+import NewsDetails from "./pages/NewsDetails";
+import PostNews from "./pages/PostNews.jsx";
+
+
 export default function App() {
   return (
     <AuthProvider>
@@ -82,6 +87,13 @@ export default function App() {
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/jobs" element={<AdminJobs />} />
             <Route path="/admin/users/:id" element={<AdminUserDetails />} />
+              <Route path="/news" element={<NewsList />} />
+            <Route path="/news/:id" element={<NewsDetails />} />
+              <Route
+              path="/chat/:posterId/:jobId/:acceptedUserId"
+              element={<UserChatWrapper />}
+            />
+            <Route path="/post-news" element={<PostNews />} />
           </Routes>
         </div>
 
